@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Flowers & Gifts Rwanda</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- ==========================================
+         HEADER
+    =========================================== -->
+
+    <header class="header">
+
+        <div class="container nav">
+
+            <a
+                class="logo"
+                href="index.html"
+            >
+
+                ✿
+
+                <span>
+                    Flowers & Gifts
+                    <small>RWANDA</small>
+                </span>
+
+            </a>
+
+
+            <nav>
+
+                <a
+                    class="active"
+                    href="index.html"
+                >
+                    Home
+                </a>
+
+                <a
+                    href="shop.html?category=flowers"
+                >
+                    Flowers
+                </a>
+
+                <a
+                    href="shop.html"
+                >
+                    Gifts
+                </a>
+
+                <a
+                    href="build-gift.html"
+                >
+                    Build a Gift
+                </a>
+
+            </nav>
+
+
+            <div class="actions">
+
+                <a href="cart.html">
+
+                    🛒
+
+                    <b id="cart-count">
+                        0
+                    </b>
+
+                </a>
+
+
+                <button id="menu-btn">
+                    ☰
+                </button>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ==========================================
+         HERO / INTRODUCTION
+    =========================================== -->
+
+    <section class="hero">
+
+        <div class="container hero-grid">
+
+
+            <!-- HERO TEXT -->
+
+            <div>
+
+                <span class="eyebrow">
+                    Flowers made with love
+                </span>
+
+
+                <h1>
+                    Beautiful <em>Flowers</em>
+                    for Every Moment.
+                </h1>
+
+
+                <p>
+                    Thoughtfully arranged flowers, beautiful gifts
+                    and unforgettable surprises delivered to someone
+                    special in Rwanda.
+                    Choose your favorites, Add to cart or order to WhatsApp.
+                </p>
+
+
+                <a
+                    class="btn primary"
+                    href="shop.html?category=flowers"
+                >
+                    Shop Flowers
+                </a>
+
+
+                <a
+                    class="btn"
+                    href="shop.html"
+                >
+                    Explore Gifts
+                </a>
+
+            </div>
+
+
+
+            <!-- HERO ART -->
+
+            <div class="hero-art">
+
+                <div class="hero-contact">
+
+                    <a
+                        href="https://wa.me/250780274472"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        DM us on WhatsApp: +250 780274472
+                    </a>
+
+                </div>
+
+
+                <img
+                    src="images/hero.jpeg"
+                    alt="Beautiful flowers"
+                    class="hero-image"
+                >
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         OUR FLOWERS
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="container">
+
+
+            <!-- SECTION HEADING -->
+
+            <div class="heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        Fresh from our collection
+                    </span>
+
+
+                    <h2>
+                        Our Flowers
+                    </h2>
+
+                </div>
+
+
+                <a href="shop.html?category=flowers">
+                    View all flowers →
+                </a>
+
+            </div>
+
+
+
+            <!-- ==========================================
+                 FLOWER OCCASIONS
+            =========================================== -->
+
+            <div class="flower-occasions">
+
+
+                <!-- ALL FLOWERS -->
+
+                <button
+                    class="occasion-btn active"
+                    onclick="filterFlowersByOccasion('all', this)"
+                >
+
+                    <span class="occasion-icon">
+                        🌸
+                    </span>
+
+                    <span>
+                        All Flowers
+                    </span>
+
+                </button>
+
+
+
+                <!-- BIRTHDAY -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('birthday', this)"
+                >
+
+                    <span class="occasion-icon">
+                        🎂
+                    </span>
+
+                    <span>
+                        Birthday
+                    </span>
+
+                </button>
+
+
+
+                <!-- ROMANCE -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('romance', this)"
+                >
+
+                    <span class="occasion-icon">
+                        ❤️
+                    </span>
+
+                    <span>
+                        Romance
+                    </span>
+
+                </button>
+
+
+
+                <!-- ANNIVERSARY -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('anniversary', this)"
+                >
+
+                    <span class="occasion-icon">
+                        💍
+                    </span>
+
+                    <span>
+                        Anniversary
+                    </span>
+
+                </button>
+
+
+
+                <!-- GRADUATION -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('graduation', this)"
+                >
+
+                    <span class="occasion-icon">
+                        🎓
+                    </span>
+
+                    <span>
+                        Graduation
+                    </span>
+
+                </button>
+
+
+
+                <!-- WEDDING -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('wedding', this)"
+                >
+
+                    <span class="occasion-icon">
+                        💐
+                    </span>
+
+                    <span>
+                        Wedding
+                    </span>
+
+                </button>
+
+
+
+                <!-- SYMPATHY -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('sympathy', this)"
+                >
+
+                    <span class="occasion-icon">
+                        🕊️
+                    </span>
+
+                    <span>
+                        Sympathy
+                    </span>
+
+                </button>
+
+
+
+                <!-- THANK YOU -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('thank-you', this)"
+                >
+
+                    <span class="occasion-icon">
+                        💝
+                    </span>
+
+                    <span>
+                        Thank You
+                    </span>
+
+                </button>
+
+
+
+                <!-- JUST BECAUSE -->
+
+                <button
+                    class="occasion-btn"
+                    onclick="filterFlowersByOccasion('just-because', this)"
+                >
+
+                    <span class="occasion-icon">
+                        🌷
+                    </span>
+
+                    <span>
+                        Just Because
+                    </span>
+
+                </button>
+
+
+            </div>
+
+
+
+            <!-- ==========================================
+                 HOMEPAGE FLOWERS
+
+                 IMPORTANT:
+                 JavaScript renders the flowers here.
+            =========================================== -->
+
+            <div
+                id="homepage-flowers"
+                class="product-grid"
+            >
+
+                <p>
+                    Loading flowers...
+                </p>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         FEATURED FLOWERS & GIFTS
+    =========================================== -->
+
+    <section class="section">
+
+        <div class="container">
+
+
+            <!-- SECTION HEADING -->
+
+            <div class="heading">
+
+                <div>
+
+                    <span class="eyebrow">
+                        Our special collection
+                    </span>
+
+
+                    <h2>
+                        Featured Flowers & Gifts
+                    </h2>
+
+                </div>
+
+
+                <a href="shop.html">
+                    Explore all →
+                </a>
+
+            </div>
+
+
+
+            <!-- ==========================================
+                 SIDE-BY-SIDE FEATURED GALLERIES
+            =========================================== -->
+
+            <div class="featured-galleries">
+
+
+                <!-- ==========================================
+                     FEATURED FLOWERS
+                =========================================== -->
+
+                <div
+                    id="featured-flower-gallery"
+                    class="featured-gallery"
+                >
+
+                    <div class="featured-gallery-image-wrapper">
+
+
+                        <img
+                            id="featured-flower-image"
+                            src=""
+                            alt="Featured flower"
+                            class="featured-gallery-image"
+                        >
+
+
+                        <div class="featured-gallery-overlay">
+
+
+                            <span
+                                id="featured-flower-category"
+                                class="featured-gallery-label"
+                            >
+                                🌸 Featured Flowers
+                            </span>
+
+
+                            <h3 id="featured-flower-name">
+                                Loading flowers...
+                            </h3>
+
+
+                            <p id="featured-flower-description">
+                            </p>
+
+
+                            <div class="featured-gallery-bottom">
+
+
+                                <strong id="featured-flower-price">
+                                </strong>
+
+
+                                <button
+                                    id="featured-flower-button"
+                                    class="featured-gallery-button"
+                                >
+                                    View Flower
+                                </button>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- ==========================================
+                     FEATURED GIFTS
+                =========================================== -->
+
+                <div
+                    id="featured-gift-gallery"
+                    class="featured-gallery"
+                >
+
+                    <div class="featured-gallery-image-wrapper">
+
+
+                        <img
+                            id="featured-gift-image"
+                            src=""
+                            alt="Featured gift"
+                            class="featured-gallery-image"
+                        >
+
+
+                        <div class="featured-gallery-overlay">
+
+
+                            <span
+                                id="featured-gift-category"
+                                class="featured-gallery-label"
+                            >
+                                🎁 Featured Gifts
+                            </span>
+
+
+                            <h3 id="featured-gift-name">
+                                Loading gifts...
+                            </h3>
+
+
+                            <p id="featured-gift-description">
+                            </p>
+
+
+                            <div class="featured-gallery-bottom">
+
+
+                                <strong id="featured-gift-price">
+                                </strong>
+
+
+                                <button
+                                    id="featured-gift-button"
+                                    class="featured-gallery-button"
+                                >
+                                    View Gift
+                                </button>
+
+
+                            </div>
+
+
+                        </div>
+
+
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         BUILD YOUR OWN GIFT
+    =========================================== -->
+
+    <section class="builder">
+
+        <div class="container builder-grid">
+
+
+            <div>
+
+                <span class="eyebrow">
+                    Make it personal
+                </span>
+
+
+                <h2>
+                    Build Your Perfect Gift
+                </h2>
+
+
+                <p>
+                    Choose your flowers first, then add chocolates,
+                    a cake, perfume, a teddy bear or another gift
+                    to create something special.
+                </p>
+
+
+                <a
+                    class="btn light"
+                    href="build-gift.html"
+                >
+                    Start Building →
+                </a>
+
+            </div>
+
+
+            <div class="builder-art">
+
+                🌹 + 🍫 + 🎂 = 🎁
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+
+    <!-- ==========================================
+         FOOTER
+    =========================================== -->
+
+    <footer>
+
+        <div class="container footer-grid">
+
+
+            <!-- BRAND -->
+
+            <div>
+
+                <h3>
+                    Flowers & Gifts Rwanda
+                </h3>
+
+
+                <p>
+                    Beautiful flowers and thoughtful gifts
+                    for every special moment.
+                </p>
+
+            </div>
+
+
+
+            <!-- SHOP -->
+
+            <div>
+
+                <h4>
+                    Shop
+                </h4>
+
+
+                <a
+                    href="shop.html?category=flowers"
+                >
+                    Flowers
+                </a>
+
+
+                <a href="shop.html">
+                    Gifts
+                </a>
+
+
+                <a href="build-gift.html">
+                    Build a Gift
+                </a>
+
+            </div>
+
+
+
+            <!-- CONTACT -->
+
+            <div>
+
+                <h4>
+                    Contact
+                </h4>
+
+
+                <p>
+                    Kigali, Rwanda
+                </p>
+
+
+                <p>
+                    +250 780274472
+                </p>
+
+            </div>
+
+
+        </div>
+
+
+        <div class="bottom">
+
+            © 2026 Flowers & Gifts Rwanda
+
+        </div>
+
+    </footer>
+
+
+
+    <!-- ==========================================
+         JAVASCRIPT
+    =========================================== -->
+
+    <script src="js/products.js"></script>
+
+    <script src="js/app.js"></script>
+
+
+</body>
+
+</html>

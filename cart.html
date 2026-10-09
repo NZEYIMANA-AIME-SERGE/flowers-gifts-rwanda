@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart | Flowers & Gifts Rwanda</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="header">
+  <div class="container nav">
+
+    <a class="logo" href="index.html">
+      ✿
+      <span>
+        Flowers & Gifts
+        <small>RWANDA</small>
+      </span>
+    </a>
+
+    <nav>
+      <a href="shop.html">Shop</a>
+      <a href="bundles.html">Gift Bundles</a>
+    </nav>
+
+    <a href="cart.html">
+      🛒 <b id="cart-count">0</b>
+    </a>
+
+  </div>
+</header>
+
+<main class="section">
+
+  <div class="container">
+
+    <h1>Your Shopping Cart</h1>
+
+    <!-- Products in cart -->
+    <div id="cart-items"></div>
+
+    <!-- Cart summary -->
+    <div class="summary" id="cart-summary"></div>
+
+  </div>
+
+</main>
+
+<script src="js/products.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+  renderCart();
+</script>
+
+</body>
+</html>

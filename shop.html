@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>
+        Shop | Flowers & Gifts Rwanda
+    </title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- ==========================================
+         HEADER
+    ========================================== -->
+
+    <header class="header">
+
+        <div class="container nav">
+
+            <a
+                class="logo"
+                href="index.html"
+            >
+
+                ✿
+
+                <span>
+
+                    Flowers & Gifts
+
+                    <small>
+                        RWANDA
+                    </small>
+
+                </span>
+
+            </a>
+
+
+ <nav>
+    <a href="index.html">Home</a>
+    <a class="active" href="shop.html">Shop</a>
+    <a href="bundles.html">Gift Bundles</a>
+    <a href="build-gift.html">Build a Gift</a>
+</nav>
+
+            <div class="actions">
+
+                <a href="cart.html">
+
+                    🛒
+
+                    <b id="cart-count">
+                        0
+                    </b>
+
+                </a>
+
+            </div>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ==========================================
+         SHOP
+    ========================================== -->
+
+    <main class="section">
+
+        <div class="container">
+
+
+            <span class="eyebrow">
+                Flowers, gifts and thoughtful surprises
+            </span>
+
+
+            <h1 id="shop-title">
+                Shop
+            </h1>
+
+
+            <p id="shop-description">
+
+                Find the perfect flowers or gift for
+                every special moment.
+
+            </p>
+
+
+
+            <!-- ==========================================
+                 SHOP TOOLBAR
+            ========================================== -->
+
+            <div class="toolbar">
+
+
+                <!-- SEARCH -->
+
+                <input
+                    id="search"
+                    type="search"
+                    placeholder="Search products..."
+                >
+
+
+                <!-- CATEGORY -->
+
+                <select id="category">
+
+                    <option value="">
+                        All Products
+                    </option>
+
+                    <option value="flowers">
+                        🌹 Flowers
+                    </option>
+
+                    <option value="chocolates">
+                        🍫 Chocolates
+                    </option>
+
+                    <option value="perfumes">
+                        🌸 Perfumes
+                    </option>
+
+                    <option value="fashion">
+                        👟 Fashion
+                    </option>
+
+                    <option value="cakes">
+                        🎂 Cakes
+                    </option>
+
+                    <option value="teddy-bears">
+                        🧸 Teddy Bears
+                    </option>
+
+                    <option value="baskets">
+                        🎁 Gift Baskets
+                    </option>
+
+                    <option value="jewelry">
+                        💎 Jewelry
+                    </option>
+
+                    <option value="gift-sets">
+                        🎁 Gift Sets
+                    </option>
+
+                    <option value="other">
+                        ✨ Other
+                    </option>
+
+                </select>
+
+
+            </div>
+
+
+
+            <!-- ==========================================
+                 PRODUCTS
+            ========================================== -->
+
+            <div
+                id="shop-products"
+                class="product-grid"
+            >
+
+                <div class="loading">
+                    Loading products...
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+
+    <!-- ==========================================
+         JAVASCRIPT
+    ========================================== -->
+
+    <script src="js/products.js"></script>
+
+    <script src="js/app.js"></script>
+
+
+    <script>
+
+        renderShop();
+
+    </script>
+
+
+</body>
+
+</html>

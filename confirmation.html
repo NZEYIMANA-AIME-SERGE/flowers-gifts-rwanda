@@ -1,0 +1,64 @@
+```html
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Order Confirmed</title>
+
+    <link rel="stylesheet" href="css/style.css">
+
+</head>
+
+
+<body>
+
+    <main class="section">
+
+        <div class="container narrow center">
+
+            <div class="success">
+                🎉
+            </div>
+
+            <h1>
+                Order Received!
+            </h1>
+
+            <p>
+                Your gift order has been recorded successfully.
+            </p>
+
+            <p id="order-number">
+            </p>
+
+            <a
+                class="btn primary"
+                href="index.html">
+
+                Back to Home
+
+            </a>
+
+        </div>
+
+    </main>
+
+
+    <script>
+
+        document.getElementById('order-number').textContent =
+            'Order #GW' +
+            Math.floor(Math.random() * 9000 + 1000);
+
+    </script>
+
+</body>
+
+</html>
+```

@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Checkout | Flowers & Gifts Rwanda</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<header class="header">
+
+  <div class="container nav">
+
+    <a class="logo" href="index.html">
+      ✿
+      <span>
+        Flowers & Gifts
+        <small>RWANDA</small>
+      </span>
+    </a>
+
+    <a href="cart.html">← Back to cart</a>
+
+  </div>
+
+</header>
+
+
+<main class="section">
+
+  <div class="container narrow">
+
+    <h1>Review Your Order</h1>
+
+    <p>
+      Please provide the delivery details below.
+      Your order will be sent to us through WhatsApp for confirmation.
+    </p>
+
+
+    <form id="checkout-form" class="checkout-form">
+
+
+      <!-- ==========================================
+           CUSTOMER INFORMATION
+      =========================================== -->
+
+      <h2>Your Information</h2>
+
+      <input
+        id="customer-name"
+        required
+        placeholder="Your full name"
+      >
+
+      <input
+        id="customer-phone"
+        required
+        type="tel"
+        placeholder="Your phone number"
+      >
+
+
+      <!-- ==========================================
+           RECIPIENT INFORMATION
+      =========================================== -->
+
+      <h2>Recipient Information</h2>
+
+      <input
+        id="recipient-name"
+        required
+        placeholder="Recipient's name"
+      >
+
+      <input
+        id="recipient-phone"
+        required
+        type="tel"
+        placeholder="Recipient's phone number"
+      >
+
+
+      <!-- ==========================================
+           DELIVERY INFORMATION
+      =========================================== -->
+
+      <h2>Delivery Information</h2>
+
+      <input
+        id="delivery-location"
+        required
+        placeholder="Delivery location in Rwanda"
+      >
+
+      <label for="delivery-date">
+        Delivery date
+      </label>
+
+      <input
+        id="delivery-date"
+        required
+        type="date"
+      >
+
+
+      <!-- ==========================================
+           GIFT MESSAGE
+      =========================================== -->
+
+      <h2>Gift Message</h2>
+
+      <textarea
+        id="gift-message"
+        placeholder="Write a personal message for the recipient (optional)"
+      ></textarea>
+
+
+      <!-- ==========================================
+           ORDER SUMMARY
+      =========================================== -->
+
+      <div id="checkout-summary" class="summary"></div>
+
+
+      <!-- ==========================================
+           WHATSAPP INFORMATION
+      =========================================== -->
+
+      <div class="payment-box">
+
+        <h3>📱 Order Through WhatsApp</h3>
+
+        <p>
+          After you submit your order, your order details
+          will be sent to Flowers & Gifts Rwanda on WhatsApp.
+        </p>
+
+        <p>
+          We will contact you on WhatsApp to confirm the
+          order, delivery details, and payment.
+        </p>
+
+      </div>
+
+
+      <!-- ==========================================
+           SUBMIT
+      =========================================== -->
+
+      <button
+        type="submit"
+        class="btn primary"
+      >
+        📱 Send Order via WhatsApp
+      </button>
+
+
+    </form>
+
+  </div>
+
+</main>
+
+
+<script src="js/products.js"></script>
+<script src="js/app.js"></script>
+
+
+<script>
+
+  // ==========================================
+  // CHECKOUT SUMMARY
+  // ==========================================
+
+  function showCheckoutSummary() {
+
+    const cart =
+      JSON.parse(localStorage.getItem("cart")) || [];
+
+
+    const summary =
+      document.getElementById("checkout-summary");
+
+
+    // Empty cart
+
+    if (cart.length === 0) {
+
+      summary.innerHTML = `
+        <h3>Order Summary</h3>
+        <p>Your cart is empty.</p>
+      `;
+
+      return;
+
+    }
+
+
+    let subtotal = 0;
+
+
+    let productsHTML = "";
+
+
+    cart.forEach(item => {
+
+      const itemTotal =
+        item.price * item.quantity;
+
+
+      subtotal += itemTotal;
+
+
+      productsHTML += `
+
+  <div class="summary-item checkout-product">
+
+    ${
+      item.image
+        ? `
+          <img
+            src="${item.image}"
+            alt="${item.name}"
+            class="checkout-product-image"
+          >
+        `
+        : `
+          <div class="checkout-product-image no-image">
+            🌸
+          </div>
+        `
+    }
+
+    <div class="checkout-product-info">
+
+      <p>
+        <strong>${item.name}</strong>
+      </p>
+
+      <p>
+        ${item.quantity} ×
+        ${item.price.toLocaleString()} RWF
+      </p>
+
+      <p>
+        Subtotal:
+        <strong>
+          ${itemTotal.toLocaleString()} RWF
+        </strong>
+      </p>
+
+    </div>
+
+  </div>
+
+`;
+    });
+
+
+    const deliveryFee =
+      subtotal > 0 ? 2000 : 0;
+
+
+    const total =
+      subtotal + deliveryFee;
+
+
+    summary.innerHTML = `
+
+      <h3>Order Summary</h3>
+
+      ${productsHTML}
+
+      <hr>
+
+      <p>
+        Subtotal:
+        <strong>
+          ${subtotal.toLocaleString()} RWF
+        </strong>
+      </p>
+
+      <p>
+        Delivery:
+        <strong>
+          ${deliveryFee.toLocaleString()} RWF
+        </strong>
+      </p>
+
+      <hr>
+
+      <p>
+        <strong>
+          Total:
+          ${total.toLocaleString()} RWF
+        </strong>
+      </p>
+
+    `;
+
+  }
+
+
+  // ==========================================
+  // SHOW SUMMARY
+  // ==========================================
+
+  showCheckoutSummary();
+
+
+  // ==========================================
+  // SUBMIT ORDER
+  // ==========================================
+
+  document
+    .getElementById("checkout-form")
+    .addEventListener("submit", async function(event) {
+
+      event.preventDefault();
+
+
+      // ==========================================
+      // GET CART
+      // ==========================================
+
+      const cart =
+        JSON.parse(localStorage.getItem("cart")) || [];
+
+
+      // ==========================================
+      // CHECK CART
+      // ==========================================
+
+      if (cart.length === 0) {
+
+        alert("Your cart is empty.");
+
+        return;
+
+      }
+
+
+      // ==========================================
+      // CHECK MONGODB IDs
+      // ==========================================
+
+      const productsWithoutMongoId =
+        cart.filter(item => !item.mongoId);
+
+
+      if (productsWithoutMongoId.length > 0) {
+
+        alert(
+          "Some products in your cart are missing their database ID. " +
+          "Please return to the shop, remove the old items, and add them again."
+        );
+
+        return;
+
+      }
+
+
+      // ==========================================
+      // CREATE ORDER REQUEST
+      // ==========================================
+      //
+      // IMPORTANT:
+      // We intentionally DO NOT send prices,
+      // subtotal, delivery fee, or total.
+      //
+      // The backend gets the real information
+      // from MongoDB.
+      // ==========================================
+
+      const orderRequest = {
+
+        customer: {
+
+          name:
+            document
+              .getElementById("customer-name")
+              .value
+              .trim(),
+
+          phone:
+            document
+              .getElementById("customer-phone")
+              .value
+              .trim(),
+
+          email: ""
+
+        },
+
+
+        recipient: {
+
+          name:
+            document
+              .getElementById("recipient-name")
+              .value
+              .trim(),
+
+          phone:
+            document
+              .getElementById("recipient-phone")
+              .value
+              .trim()
+
+        },
+
+
+        delivery: {
+
+          location:
+            document
+              .getElementById("delivery-location")
+              .value
+              .trim(),
+
+          date:
+            document
+              .getElementById("delivery-date")
+              .value
+
+        },
+
+
+        giftMessage:
+          document
+            .getElementById("gift-message")
+            .value
+            .trim(),
+
+
+        items:
+
+          cart.map(item => ({
+
+            productId:
+              item.mongoId,
+
+            quantity:
+              item.quantity
+
+          }))
+
+      };
+
+
+      // ==========================================
+      // SEND TO BACKEND
+      // ==========================================
+
+      try {
+
+        const response = await fetch(
+          "http://localhost:5000/api/orders",
+          {
+
+            method: "POST",
+
+            headers: {
+
+              "Content-Type":
+                "application/json"
+
+            },
+
+            body:
+              JSON.stringify(orderRequest)
+
+          }
+        );
+
+
+        const data =
+          await response.json();
+
+
+        console.log(
+          "Server response:",
+          data
+        );
+
+
+        // ==========================================
+        // SERVER ERROR
+        // ==========================================
+
+        if (!response.ok) {
+
+          alert(
+            data.message ||
+            "There was a problem creating your order."
+          );
+
+          return;
+
+        }
+
+
+        // ==========================================
+        // SUCCESS
+        // ==========================================
+
+       if (data.order) {
+
+  console.log(
+    "Order created:",
+    data.order
+  );
+
+
+  // ==========================================
+  // CREATE WHATSAPP ORDER MESSAGE
+  // ==========================================
+
+  const savedOrder = data.order;
+
+
+  let whatsappMessage =
+  "*NEW ORDER - FLOWERS & GIFTS RWANDA*\n\n";
+
+
+// ==========================================
+// ORDER ID
+// ==========================================
+
+whatsappMessage +=
+  "*Order ID:* " +
+  savedOrder._id +
+  "\n\n";
+
+
+// ==========================================
+// CUSTOMER
+// ==========================================
+
+whatsappMessage +=
+  "*CUSTOMER*\n";
+
+whatsappMessage +=
+  "Name: " +
+  savedOrder.customer.name +
+  "\n";
+
+whatsappMessage +=
+  "Phone: " +
+  savedOrder.customer.phone +
+  "\n\n";
+
+
+// ==========================================
+// RECIPIENT
+// ==========================================
+
+whatsappMessage +=
+  "*RECIPIENT*\n";
+
+whatsappMessage +=
+  "Name: " +
+  savedOrder.recipient.name +
+  "\n";
+
+whatsappMessage +=
+  "Phone: " +
+  savedOrder.recipient.phone +
+  "\n\n";
+
+
+// ==========================================
+// DELIVERY
+// ==========================================
+
+whatsappMessage +=
+  "*DELIVERY*\n";
+
+whatsappMessage +=
+  "Location: " +
+  savedOrder.delivery.location +
+  "\n";
+
+whatsappMessage +=
+  "Date: " +
+  savedOrder.delivery.date +
+  "\n\n";
+
+
+// ==========================================
+// ORDER ITEMS
+// ==========================================
+
+whatsappMessage +=
+  "*ORDER ITEMS*\n\n";
+
+
+savedOrder.items.forEach((item, index) => {
+
+  whatsappMessage +=
+    (index + 1) +
+    ". " +
+    item.name +
+    "\n";
+
+  whatsappMessage +=
+    "Quantity: " +
+    item.quantity +
+    "\n";
+
+  whatsappMessage +=
+    "Unit price: " +
+    item.price.toLocaleString() +
+    " RWF\n";
+
+  whatsappMessage +=
+    "Subtotal: " +
+    item.itemTotal.toLocaleString() +
+    " RWF\n\n";
+
+});
+
+
+// ==========================================
+// TOTALS
+// ==========================================
+
+whatsappMessage +=
+  "*ORDER TOTAL*\n";
+
+whatsappMessage +=
+  "Subtotal: " +
+  savedOrder.subtotal.toLocaleString() +
+  " RWF\n";
+
+whatsappMessage +=
+  "Delivery: " +
+  savedOrder.deliveryFee.toLocaleString() +
+  " RWF\n";
+
+whatsappMessage +=
+  "*Total: " +
+  savedOrder.total.toLocaleString() +
+  " RWF*\n\n";
+
+
+// ==========================================
+// GIFT MESSAGE
+// ==========================================
+
+if (savedOrder.giftMessage) {
+
+  whatsappMessage +=
+    "*GIFT MESSAGE*\n";
+
+  whatsappMessage +=
+    savedOrder.giftMessage +
+    "\n\n";
+
+}
+
+
+// ==========================================
+// FINAL INSTRUCTION
+// ==========================================
+
+whatsappMessage +=
+  "*Please confirm this order and advise the customer about payment.*";
+
+
+  // ==========================================
+  // WHATSAPP URL
+  // ==========================================
+
+  const ownerWhatsApp =
+    "250791912189";
+
+
+  const whatsappURL =
+    "https://wa.me/" +
+    ownerWhatsApp +
+    "?text=" +
+    encodeURIComponent(whatsappMessage);
+
+
+  // ==========================================
+  // OPEN WHATSAPP
+  // ==========================================
+
+  window.open(
+    whatsappURL,
+    "_blank"
+  );
+
+
+  // ==========================================
+  // CLEAR CART
+  // ==========================================
+
+  localStorage.removeItem("cart");
+
+
+  if (typeof updateCount === "function") {
+
+    updateCount();
+
+  }
+
+
+  // ==========================================
+  // CUSTOMER MESSAGE
+  // ==========================================
+
+  alert(
+    "Your order has been created. WhatsApp will now open so you can send the order to Flowers & Gifts Rwanda."
+  );
+
+
+} else {
+          alert(
+            "The server did not return the order."
+          );
+
+        }
+
+
+      } catch (error) {
+
+        console.error(
+          "Order submission error:",
+          error
+        );
+
+
+        alert(
+          "Could not connect to the Flowers & Gifts server."
+        );
+
+      }
+
+    });
+
+</script>
+
+
+</body>
+</html>

@@ -1,0 +1,217 @@
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Build a Gift | Flowers & Gifts Rwanda</title>
+
+    <link
+        rel="stylesheet"
+        href="css/style.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- ==========================================
+         HEADER
+    =========================================== -->
+
+    <header class="header">
+
+        <div class="container nav">
+
+            <a
+                class="logo"
+                href="index.html"
+            >
+
+                ✿
+
+                <span>
+
+                    Flowers & Gifts
+
+                    <small>
+                        RWANDA
+                    </small>
+
+                </span>
+
+            </a>
+
+
+            <nav>
+
+                <a href="index.html">
+                    Home
+                </a>
+
+                <a href="shop.html?category=flowers">
+                    Flowers
+                </a>
+
+                <a href="shop.html?category=gifts">
+                    Gifts
+                </a>
+
+                <a href="bundles.html">
+                    Gift Bundles
+                </a>
+
+                <a
+                    class="active"
+                    href="build-gift.html"
+                >
+                    Build a Gift
+                </a>
+
+            </nav>
+
+
+            <a href="cart.html">
+
+                🛒
+
+                <b id="cart-count">
+                    0
+                </b>
+
+            </a>
+
+        </div>
+
+    </header>
+
+
+
+    <!-- ==========================================
+         MAIN
+    =========================================== -->
+
+    <main class="section">
+
+        <div class="container">
+
+
+            <span class="eyebrow">
+
+                Make it personal
+
+            </span>
+
+
+            <h1>
+
+                Build Your Own Gift
+
+            </h1>
+
+
+            <p>
+
+                Start with beautiful flowers, then
+                add thoughtful gifts to create
+                something special.
+
+            </p>
+
+
+
+          <div class="builder-form">
+
+    <!-- CHOOSE FLOWERS -->
+
+    <label>
+
+        Choose flowers
+
+        <select id="flower">
+
+            <option value="">
+
+                Choose flowers
+
+            </option>
+
+        </select>
+
+    </label>
+
+
+    <!-- CHOOSE GIFT -->
+
+    <label>
+
+        Choose a gift
+
+        <select id="sweet">
+
+            <option value="0">
+
+                No additional gift
+
+            </option>
+
+        </select>
+
+    </label>
+
+
+    <!-- TOTAL -->
+
+    <h2>
+
+        Total:
+
+        <span id="builder-total">
+
+            0 RWF
+
+        </span>
+
+    </h2>
+
+
+    <!-- ADD TO CART -->
+
+    <button
+        class="btn primary"
+        onclick="addCustomGift()"
+    >
+
+        Add Gift to Cart
+
+    </button>
+
+</div>
+
+
+    </main>
+
+
+
+    <!-- ==========================================
+         JAVASCRIPT
+    =========================================== -->
+
+    <script src="js/products.js"></script>
+
+    <script src="js/app.js"></script>
+
+
+</body>
+
+</html>
+
