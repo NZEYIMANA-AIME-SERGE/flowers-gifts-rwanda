@@ -3,7 +3,8 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const multer = require("multer");
 const { v2: cloudinary } = require("cloudinary");
-require("dotenv").config();
+
+require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
 const Product = require("./models/product");
 const Order = require("./models/order");
