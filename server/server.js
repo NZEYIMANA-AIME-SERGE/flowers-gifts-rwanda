@@ -6,6 +6,8 @@ const { v2: cloudinary } = require("cloudinary");
 
 require("dotenv").config({ path: require("path").join(__dirname, ".env") });
 
+const crypto = require("crypto");
+
 const Product = require("./models/product");
 const Order = require("./models/order");
 
@@ -61,6 +63,134 @@ const upload = multer({
 
 app.use(cors());
 app.use(express.json());
+
+
+
+const ADMIN_TOKEN_LIFETIME = 8 * 60 * 60 * 1000;
+
+function safeCompare(valueA, valueB) {
+    const a = Buffer.from(String(valueA));
+    const b = Buffer.from(String(valueB));
+
+    return a.length === b.length &&
+        crypto.timingSafeEqual(a, b);
+}
+
+function createAdminToken(username) {
+    const payload = Buffer.from(JSON.stringify({
+        username,
+        expiresAt: Date.now() + ADMIN_TOKEN_LIFETIME
+    })).toString("base64url");
+
+    const signature = crypto
+        .createHmac("sha256", process.env.ADMIN_TOKEN_SECRET)
+        .update(payload)
+        .digest("base64url");
+
+    return `${payload}.${signature}`;
+}
+
+function requireAdmin(req, res, next) {
+    try {
+        const secret = process.env.ADMIN_TOKEN_SECRET;
+
+        if (!secret) {
+            return res.status(503).json({
+                success: false,
+                message: "Admin authentication is not configured."
+            });
+        }
+
+        const authorization = req.headers.authorization || "";
+        const [scheme, token] = authorization.split(" ");
+
+        if (scheme !== "Bearer" || !token) {
+            return res.status(401).json({
+                success: false,
+                message: "Please log in as admin."
+            });
+        }
+
+        const parts = token.split(".");
+
+        if (parts.length !== 2) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid admin session."
+            });
+        }
+
+        const [payload, suppliedSignature] = parts;
+
+        const expectedSignature = crypto
+            .createHmac("sha256", secret)
+            .update(payload)
+            .digest("base64url");
+
+        if (!safeCompare(suppliedSignature, expectedSignature)) {
+            return res.status(401).json({
+                success: false,
+                message: "Invalid admin session."
+            });
+        }
+
+        const session = JSON.parse(
+            Buffer.from(payload, "base64url").toString("utf8")
+        );
+
+        if (
+            session.username !== process.env.ADMIN_USERNAME ||
+            !Number.isFinite(session.expiresAt) ||
+            session.expiresAt <= Date.now()
+        ) {
+            return res.status(401).json({
+                success: false,
+                message: "Admin session expired. Please log in again."
+            });
+        }
+
+        next();
+    } catch (error) {
+        return res.status(401).json({
+            success: false,
+            message: "Invalid admin session."
+        });
+    }
+}
+
+// Login endpoint: this must remain public so the admin can log in.
+app.post("/api/auth/admin/login", (req, res) => {
+    const { username, password } = req.body || {};
+
+    const expectedUsername = process.env.ADMIN_USERNAME;
+    const expectedPassword = process.env.ADMIN_PASSWORD;
+    const tokenSecret = process.env.ADMIN_TOKEN_SECRET;
+
+    if (!expectedUsername || !expectedPassword || !tokenSecret) {
+        return res.status(503).json({
+            success: false,
+            message: "Admin authentication is not configured."
+        });
+    }
+
+    if (
+        typeof username !== "string" ||
+        typeof password !== "string" ||
+        !safeCompare(username, expectedUsername) ||
+        !safeCompare(password, expectedPassword)
+    ) {
+        return res.status(401).json({
+            success: false,
+            message: "Incorrect username or password."
+        });
+    }
+
+    return res.json({
+        success: true,
+        token: createAdminToken(expectedUsername),
+        expiresIn: ADMIN_TOKEN_LIFETIME
+    });
+});
 
 
 // ================================
@@ -121,6 +251,9 @@ app.get("/api/products", async (req, res) => {
 
 
 // CREATE PRODUCT
+
+// Protect all admin APIs: products, orders, statistics and uploads.
+app.use("/api/admin", requireAdmin);
 
 app.post( "/api/admin/products",
     upload.single("image"),

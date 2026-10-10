@@ -1,0 +1,234 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Login | Flowers & Gifts Rwanda</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background: #f8f3ef;
+            color: #33252b;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 420px;
+            padding: 36px;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 12px 40px rgba(50, 30, 40, 0.09);
+        }
+
+        .brand {
+            text-align: center;
+            margin-bottom: 28px;
+        }
+
+        .brand-icon {
+            font-size: 42px;
+        }
+
+        h1 {
+            margin: 12px 0 8px;
+            font-size: 25px;
+        }
+
+        .subtitle {
+            margin: 0;
+            color: #776a70;
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        label {
+            display: block;
+            margin: 18px 0 8px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        input {
+            width: 100%;
+            padding: 13px 14px;
+            border: 1px solid #ded5d9;
+            border-radius: 9px;
+            font-size: 15px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #9b536f;
+            box-shadow: 0 0 0 3px rgba(155, 83, 111, 0.12);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 14px;
+            border: none;
+            border-radius: 9px;
+            background: #873f5b;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #6e3048;
+        }
+
+        button:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+        }
+
+        #message {
+            display: none;
+            margin-top: 16px;
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        #message.error {
+            display: block;
+            color: #9a2635;
+            background: #fff0f0;
+        }
+
+        #message.success {
+            display: block;
+            color: #24663a;
+            background: #edf9f0;
+        }
+
+        .footer {
+            margin-top: 24px;
+            text-align: center;
+            color: #887b81;
+            font-size: 12px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="login-card">
+        <div class="brand">
+            <div class="brand-icon">🌸</div>
+            <h1>Flowers & Gifts Rwanda</h1>
+            <p class="subtitle">Administrator access</p>
+        </div>
+
+        <form id="loginForm">
+            <label for="username">Admin username</label>
+            <input
+                id="username"
+                name="username"
+                type="text"
+                autocomplete="username"
+                placeholder="Enter your admin username"
+                required
+            >
+
+            <label for="password">Password</label>
+            <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Enter your password"
+                required
+            >
+
+            <button id="loginButton" type="submit">
+                Log in to Dashboard
+            </button>
+
+            <div id="message" role="alert"></div>
+        </form>
+
+        <div class="footer">
+            Authorized administrators only
+        </div>
+    </main>
+
+    <script>
+        const API_URL = "https://flowers-gifts-rwanda.onrender.com";
+
+        const loginForm = document.getElementById("loginForm");
+        const loginButton = document.getElementById("loginButton");
+        const message = document.getElementById("message");
+
+        // Reuse an existing session if one is available.
+        if (sessionStorage.getItem("adminToken")) {
+            window.location.replace("./index.html");
+        }
+
+        loginForm.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            message.className = "";
+            message.textContent = "";
+            message.style.display = "none";
+
+            loginButton.disabled = true;
+            loginButton.textContent = "Logging in...";
+
+            const username = document.getElementById("username").value.trim();
+            const password = document.getElementById("password").value;
+
+            try {
+                const response = await fetch(
+                    `${API_URL}/api/auth/admin/login`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({ username, password })
+                    }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success || !data.token) {
+                    throw new Error(
+                        data.message || "Login failed. Please try again."
+                    );
+                }
+
+                sessionStorage.setItem("adminToken", data.token);
+
+                message.textContent = "Login successful. Opening dashboard...";
+                message.className = "success";
+
+                window.location.replace("./index.html");
+            } catch (error) {
+                message.textContent =
+                    error.message === "Failed to fetch"
+                        ? "Cannot reach the server. Check your connection and try again."
+                        : error.message || "Something went wrong. Please try again.";
+
+                message.className = "error";
+                loginButton.disabled = false;
+                loginButton.textContent = "Log in to Dashboard";
+            }
+        });
+    </script>
+</body>
+</html>

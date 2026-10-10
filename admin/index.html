@@ -795,6 +795,88 @@
 
         const API_URL = "https://flowers-gifts-rwanda.onrender.com";
 
+        
+/* ADMIN SESSION PROTECTION */
+const adminOriginalFetch = window.fetch.bind(window);
+
+window.fetch = async function (input, init = {}) {
+    const requestUrl = typeof input === "string" ? input : input.url;
+
+    const isAdminRequest = requestUrl.startsWith(
+        `${API_URL}/api/admin/`
+    );
+
+    if (!isAdminRequest) {
+        return adminOriginalFetch(input, init);
+    }
+
+    const token = sessionStorage.getItem("adminToken");
+
+    if (!token) {
+        window.location.replace("./login.html");
+        throw new Error("Admin login required.");
+    }
+
+    const headers = new Headers(
+        input instanceof Request ? input.headers : undefined
+    );
+
+    if (init.headers) {
+        new Headers(init.headers).forEach((value, key) => {
+            headers.set(key, value);
+        });
+    }
+
+    headers.set("Authorization", `Bearer ${token}`);
+
+    const response = await adminOriginalFetch(input, {
+        ...init,
+        headers
+    });
+
+    if (response.status === 401) {
+        sessionStorage.removeItem("adminToken");
+        window.location.replace("./login.html");
+    }
+
+    return response;
+};
+
+// Redirect anyone who opens the dashboard without logging in.
+if (!sessionStorage.getItem("adminToken")) {
+    window.location.replace("./login.html");
+}
+
+// Add a logout button without rebuilding the existing dashboard.
+const adminLogoutButton = document.createElement("button");
+
+adminLogoutButton.type = "button";
+adminLogoutButton.textContent = "Log out";
+adminLogoutButton.setAttribute("aria-label", "Log out of admin dashboard");
+
+adminLogoutButton.style.cssText = `
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    z-index: 99999;
+    padding: 11px 18px;
+    border: none;
+    border-radius: 8px;
+    background: #873f5b;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
+`;
+
+adminLogoutButton.addEventListener("click", function () {
+    sessionStorage.removeItem("adminToken");
+    window.location.replace("./login.html");
+});
+
+document.body.appendChild(adminLogoutButton);
+
+
 
         /* ==========================================
            ORDERS
