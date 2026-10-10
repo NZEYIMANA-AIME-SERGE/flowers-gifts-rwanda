@@ -17,7 +17,7 @@ let cart = JSON.parse(
 // BACKEND API
 // ==========================================
 
-const API_URL = "http://localhost:5000";
+const API_URL = "https://flowers-gifts-rwanda.onrender.com";
 
 
 // ==========================================
