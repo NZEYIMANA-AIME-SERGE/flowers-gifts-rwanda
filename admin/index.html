@@ -1,31 +1,15 @@
 
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-
     <meta charset="UTF-8">
-
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
-
-    <title>Admin Dashboard | Flowers & Gifts Rwanda</title>
-
-    <link
-        rel="stylesheet"
-        href="../css/style.css"
-    >
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Management | Flowers & Gifts Rwanda</title>
+    <link rel="stylesheet" href="../css/style.css">
 
     <style>
-
-        /* ==========================================
-           GENERAL ADMIN STYLES
-        ========================================== */
-
         .admin-section {
-            margin-top: 40px;
+            margin-top: 30px;
         }
 
         .section-header {
@@ -37,20 +21,16 @@
             flex-wrap: wrap;
         }
 
-        .section-header h2 {
-            margin: 0;
-        }
-
         .admin-button {
             border: none;
             padding: 11px 18px;
             border-radius: 7px;
             cursor: pointer;
             font-size: 14px;
-            transition: 0.2s;
         }
 
-        .admin-button:hover {
+        .admin-button:hover,
+        .small-button:hover {
             opacity: 0.85;
         }
 
@@ -69,98 +49,11 @@
             color: white;
         }
 
-        .admin-button.danger {
-            background: #b42318;
-            color: white;
-        }
-
-
-        /* ==========================================
-           ORDER DETAILS
-        ========================================== */
-
-        .order-details {
-            margin-top: 25px;
-            padding: 25px;
-            border-radius: 12px;
-            background: #ffffff;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-        }
-
-        .order-details h2 {
-            margin-top: 0;
-        }
-
-        .order-info {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .info-box {
-            padding: 15px;
-            border-radius: 8px;
-            background: #f8f8f8;
-        }
-
-        .info-box strong {
-            display: block;
-            margin-bottom: 6px;
-        }
-
-        .order-items {
-            margin: 20px 0;
-        }
-
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            gap: 15px;
-            padding: 12px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .order-controls {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 25px;
-        }
-
-        .order-controls label {
-            display: block;
-            margin-bottom: 7px;
-            font-weight: 600;
-        }
-
-        .order-controls select {
-            width: 100%;
-            padding: 11px;
-            border: 1px solid #ddd;
-            border-radius: 7px;
-            background: white;
-        }
-
-        .clickable-order {
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .clickable-order:hover {
-            background: #f7f7f7;
-        }
-
-
-        /* ==========================================
-           PRODUCT MANAGEMENT
-        ========================================== */
-
         .product-manager {
             margin-top: 25px;
             padding: 25px;
             border-radius: 12px;
-            background: #ffffff;
+            background: white;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
@@ -222,17 +115,8 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-top: 10px;
+            margin-top: 15px;
         }
-
-        .checkbox-group input {
-            width: auto;
-        }
-
-
-        /* ==========================================
-           PRODUCT TABLE
-        ========================================== */
 
         .product-table-wrapper {
             overflow-x: auto;
@@ -241,7 +125,7 @@
         .product-table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 800px;
+            min-width: 650px;
         }
 
         .product-table th,
@@ -258,10 +142,6 @@
 
         .product-table td {
             font-size: 14px;
-        }
-
-        .product-table tr:hover {
-            background: #fafafa;
         }
 
         .product-actions {
@@ -288,16 +168,6 @@
             color: #b42318;
         }
 
-        .stock-low {
-            color: #b42318;
-            font-weight: 700;
-        }
-
-        .stock-good {
-            color: #16803c;
-            font-weight: 600;
-        }
-
         .availability-on {
             color: #16803c;
             font-weight: 600;
@@ -308,16 +178,11 @@
             font-weight: 600;
         }
 
-
-        /* ==========================================
-           PRODUCT STATUS
-        ========================================== */
-
         .product-message {
+            display: none;
             padding: 15px;
             border-radius: 8px;
             margin-bottom: 15px;
-            display: none;
         }
 
         .product-message.success {
@@ -331,11 +196,6 @@
             background: #fdeaea;
             color: #a12626;
         }
-
-
-        /* ==========================================
-           LOADING / ERRORS
-        ========================================== */
 
         .loading {
             padding: 20px;
@@ -356,2132 +216,665 @@
             flex-wrap: wrap;
         }
 
-    </style>
+        #connection-status {
+            margin-bottom: 25px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
 
+        #product-image-preview {
+            display: none;
+            width: 180px;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #ddd;
+            margin-top: 12px;
+        }
+
+        .price-note {
+            margin-top: 6px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .product-manager,
+            .product-form {
+                padding: 15px;
+            }
+        }
+    </style>
 </head>
 
-
 <body>
-
-
-    <!-- ==========================================
-         ADMIN HEADER
-    ========================================== -->
-
     <header class="header">
-
         <div class="container nav">
-
-            <a
-                class="logo"
-                href="../index.html"
-            >
-
+            <a class="logo" href="../index.html">
                 ✿
-
                 <span>
-
-                    Admin Dashboard
-
-                    <small>
-                        FLOWERS & GIFTS RWANDA
-                    </small>
-
+                    Product Management
+                    <small>FLOWERS & GIFTS RWANDA</small>
                 </span>
-
             </a>
 
-
-            <a href="../index.html">
-
-                View Store ↗
-
-            </a>
-
+            <a href="../index.html">View Store ↗</a>
         </div>
-
     </header>
 
-
-    <!-- ==========================================
-         DASHBOARD
-    ========================================== -->
-
     <main class="section">
-
         <div class="container">
+            <span class="eyebrow">Business control center</span>
+            <h1>Product Management</h1>
 
-
-            <span class="eyebrow">
-                Business control center
-            </span>
-
-
-            <h1>
-                Dashboard
-            </h1>
-
-
-            <!-- ==========================================
-                 CONNECTION STATUS
-            ========================================== -->
-
-            <div
-                id="connection-status"
-                style="
-                    margin-bottom: 25px;
-                    padding: 12px 16px;
-                    border-radius: 8px;
-                    background: #f5f5f5;
-                "
-            >
-
-                Connecting to server...
-
-            </div>
-
-
-            <!-- ==========================================
-                 STATISTICS
-            ========================================== -->
-
-            <div class="stats">
-
-                <div>
-
-                    <b id="today-sales">
-                        0 RWF
-                    </b>
-
-                    <span>
-                        Today's Sales
-                    </span>
-
-                </div>
-
-
-                <div>
-
-                    <b id="total-orders">
-                        0
-                    </b>
-
-                    <span>
-                        Total Orders
-                    </span>
-
-                </div>
-
-
-                <div>
-
-                    <b id="total-products">
-                        0
-                    </b>
-
-                    <span>
-                        Products
-                    </span>
-
-                </div>
-
-
-                <div>
-
-                    <b id="low-stock">
-                        0
-                    </b>
-
-                    <span>
-                        Low Stock
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <!-- ==========================================
-                 RECENT ORDERS
-            ========================================== -->
+            <div id="connection-status">Connecting to server...</div>
 
             <div class="admin-section">
-
                 <div class="section-header">
-
-                    <h2>
-                        Recent Orders
-                    </h2>
-
-                </div>
-
-
-                <div
-                    class="table"
-                    id="recent-orders"
-                >
-
-                    <div class="loading">
-                        Loading orders...
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- ==========================================
-                 ORDER DETAILS
-            ========================================== -->
-
-            <div
-                id="order-details"
-                class="order-details"
-                style="display: none;"
-            >
-
-                <h2>
-                    Order Details
-                </h2>
-
-
-                <div id="order-details-content">
-                </div>
-
-            </div>
-
-
-            <!-- ==========================================
-                 PRODUCT MANAGEMENT
-            ========================================== -->
-
-            <div class="admin-section">
-
-                <div class="section-header">
-
-                    <h2>
-                        Product Management
-                    </h2>
-
-
+                    <h2>Products</h2>
                     <button
                         class="admin-button primary"
+                        type="button"
                         onclick="openAddProductForm()"
                     >
-
                         + Add Product
-
                     </button>
-
                 </div>
 
+                <div id="product-message" class="product-message"></div>
 
-                <div
-                    id="product-message"
-                    class="product-message"
-                >
-                </div>
-
-
-                <!-- ==========================================
-                     PRODUCT FORM
-                ========================================== -->
-
-                <div
-                    id="product-form"
-                    class="product-form"
-                >
-
-                    <h3 id="product-form-title">
-                        Add New Product
-                    </h3>
-
+                <div id="product-form" class="product-form">
+                    <h3 id="product-form-title">Add New Product</h3>
 
                     <form id="product-manager-form" onsubmit="saveProduct(event)">
-
-                        <input
-                            type="hidden"
-                            id="product-id"
-                        >
-
+                        <input type="hidden" id="product-id">
 
                         <div class="form-grid">
-
+                            <div class="form-group">
+                                <label for="product-name">Product Name *</label>
+                                <input type="text" id="product-name" required>
+                            </div>
 
                             <div class="form-group">
+                                <label for="product-category">Category *</label>
+                                <select id="product-category" required>
+                                    <option value="flowers">Flowers</option>
+                                    <option value="chocolates">Chocolates</option>
+                                    <option value="perfumes">Perfumes</option>
+                                    <option value="fashion">Fashion</option>
+                                    <option value="cakes">Cakes</option>
+                                    <option value="teddy-bears">Teddy Bears</option>
+                                    <option value="baskets">Gift Baskets</option>
+                                    <option value="jewelry">Jewelry</option>
+                                    <option value="gift-sets">Gift Sets</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
 
-                                <label for="product-name">
-                                    Product Name
-                                </label>
+                            <div class="form-group">
+                                <label for="product-occasion">Occasion</label>
+                                <select id="product-occasion">
+                                    <option value="">No specific occasion</option>
+                                    <option value="birthday">Birthday</option>
+                                    <option value="romance">Romance</option>
+                                    <option value="anniversary">Anniversary</option>
+                                    <option value="graduation">Graduation</option>
+                                    <option value="wedding">Wedding</option>
+                                    <option value="sympathy">Sympathy</option>
+                                    <option value="thank-you">Thank You</option>
+                                    <option value="just-because">Just Because</option>
+                                </select>
+                            </div>
 
+                            <div class="form-group">
+                                <label for="product-price">Price (RWF)</label>
                                 <input
-                                    type="text"
-                                    id="product-name"
-                                    required
-                                >
-
+    type="text"
+    id="product-price"
+    placeholder="e.g. 25000 RWF, Negotiable, or leave empty"
+>
+                                <small class="price-note">
+                                    Leave blank if you do not want to set a price.
+                                </small>
                             </div>
-
-
-                            <div class="form-group">
-
-                                <label for="product-category">
-                                    Category
-                                </label>
-
-                                <select id="product-category">
-    <option value="flowers">Flowers</option>
-    <option value="chocolates">Chocolates</option>
-    <option value="perfumes">Perfumes</option>
-    <option value="fashion">Fashion</option>
-    <option value="cakes">Cakes</option>
-    <option value="teddy-bears">Teddy Bears</option>
-    <option value="baskets">Gift Baskets</option>
-    <option value="jewelry">Jewelry</option>
-    <option value="gift-sets">Gift Sets</option>
-    <option value="other">Other</option>
-</select>
-
-                            </div>
-
-                            <div class="form-group">
-    <label for="product-occasion">Occasion</label>
-
-    <select id="product-occasion">
-        <option value="">No specific occasion</option>
-        <option value="birthday">Birthday</option>
-        <option value="romance">Romance</option>
-        <option value="anniversary">Anniversary</option>
-        <option value="graduation">Graduation</option>
-        <option value="wedding">Wedding</option>
-        <option value="sympathy">Sympathy</option>
-        <option value="thank-you">Thank You</option>
-        <option value="just-because">Just Because</option>
-    </select>
-</div>
-
-
-                            <div class="form-group">
-
-                                <label for="product-price">
-                                    Price (RWF)
-                                </label>
-
-                                <input
-                                    type="number"
-                                    id="product-price"
-                                    min="0"
-                                    step="1"
-                                    required
-                                >
-
-                            </div>
-
-
-                            
 
                             <div class="form-group full-width">
-
-                                <label for="product-description">
-                                    Description
-                                </label>
-
+                                <label for="product-description">Description</label>
                                 <textarea
                                     id="product-description"
                                     placeholder="Describe the product..."
                                 ></textarea>
-
                             </div>
 
-
                             <div class="form-group full-width">
-
-    <label for="product-image-file">
-        Product Photo
-    </label>
-
-    <input
-        type="file"
-        id="product-image-file"
-        accept="image/*"
-    >
-
-    <small>
-        Choose a photo from your computer. Maximum size: 5 MB.
-    </small>
-
-    <div style="margin-top: 12px;">
-        <img
-            id="product-image-preview"
-            src=""
-            alt="Product photo preview"
-            style="
-                display: none;
-                width: 180px;
-                height: 180px;
-                object-fit: cover;
-                border-radius: 10px;
-                border: 1px solid #ddd;
-            "
-        >
-    </div>
-
-</div>
-
+                                <label for="product-image-file">Product Photo</label>
+                                <input
+                                    type="file"
+                                    id="product-image-file"
+                                    accept="image/*"
+                                >
+                                <small>
+                                    Choose a photo from your computer. Maximum size: 5 MB.
+                                </small>
+                                <img
+                                    id="product-image-preview"
+                                    src=""
+                                    alt="Product photo preview"
+                                >
+                            </div>
                         </div>
 
-
                         <div class="checkbox-group">
-
-                            <input
-                                type="checkbox"
-                                id="product-available"
-                                checked
-                            >
-
+                            <input type="checkbox" id="product-available" checked>
                             <label for="product-available">
                                 Product is available for customers
                             </label>
-
                         </div>
-
 
                         <div class="admin-buttons">
-    <button type="submit" class="admin-button success" id="save-product-button">
-    Save Product
-</button>
-    <button type="button" class="admin-button secondary" onclick="closeProductForm()">
-        Cancel
-    </button>
-</div>
+                            <button
+                                type="submit"
+                                class="admin-button success"
+                                id="save-product-button"
+                            >
+                                Save Product
+                            </button>
 
+                            <button
+                                type="button"
+                                class="admin-button secondary"
+                                onclick="closeProductForm()"
+                            >
+                                Cancel
+                            </button>
+                        </div>
                     </form>
-
                 </div>
-
-
-                <!-- ==========================================
-                     PRODUCT LIST
-                ========================================== -->
 
                 <div class="product-manager">
-
-                    <div
-                        id="products-container"
-                        class="product-table-wrapper"
-                    >
-
-                        <div class="loading">
-                            Loading products...
-                        </div>
-
+                    <div id="products-container" class="product-table-wrapper">
+                        <div class="loading">Loading products...</div>
                     </div>
-
                 </div>
-
             </div>
-
-
         </div>
-
     </main>
 
-
     <script>
-
-        /* ==========================================
-           BACKEND URL
-        ========================================== */
-
         const API_URL = "https://flowers-gifts-rwanda.onrender.com";
 
-        
-/* ADMIN SESSION PROTECTION */
-const adminOriginalFetch = window.fetch.bind(window);
+        // ADMIN SESSION PROTECTION
+        const adminOriginalFetch = window.fetch.bind(window);
 
-window.fetch = async function (input, init = {}) {
-    const requestUrl = typeof input === "string" ? input : input.url;
+        window.fetch = async function (input, init = {}) {
+            const requestUrl =
+                typeof input === "string" ? input : input.url;
 
-    const isAdminRequest = requestUrl.startsWith(
-        `${API_URL}/api/admin/`
-    );
+            const isAdminRequest = requestUrl.startsWith(
+                `${API_URL}/api/admin/`
+            );
 
-    if (!isAdminRequest) {
-        return adminOriginalFetch(input, init);
-    }
-
-    const token = sessionStorage.getItem("adminToken");
-
-    if (!token) {
-        window.location.replace("./login.html");
-        throw new Error("Admin login required.");
-    }
-
-    const headers = new Headers(
-        input instanceof Request ? input.headers : undefined
-    );
-
-    if (init.headers) {
-        new Headers(init.headers).forEach((value, key) => {
-            headers.set(key, value);
-        });
-    }
-
-    headers.set("Authorization", `Bearer ${token}`);
-
-    const response = await adminOriginalFetch(input, {
-        ...init,
-        headers
-    });
-
-    if (response.status === 401) {
-        sessionStorage.removeItem("adminToken");
-        window.location.replace("./login.html");
-    }
-
-    return response;
-};
-
-// Redirect anyone who opens the dashboard without logging in.
-if (!sessionStorage.getItem("adminToken")) {
-    window.location.replace("./login.html");
-}
-
-// Add a logout button without rebuilding the existing dashboard.
-const adminLogoutButton = document.createElement("button");
-
-adminLogoutButton.type = "button";
-adminLogoutButton.textContent = "Log out";
-adminLogoutButton.setAttribute("aria-label", "Log out of admin dashboard");
-
-adminLogoutButton.style.cssText = `
-    position: fixed;
-    top: 16px;
-    right: 16px;
-    z-index: 99999;
-    padding: 11px 18px;
-    border: none;
-    border-radius: 8px;
-    background: #873f5b;
-    color: white;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 3px 12px rgba(0,0,0,0.15);
-`;
-
-adminLogoutButton.addEventListener("click", function () {
-    sessionStorage.removeItem("adminToken");
-    window.location.replace("./login.html");
-});
-
-document.body.appendChild(adminLogoutButton);
-
-
-
-        /* ==========================================
-           ORDERS
-        ========================================== */
-
-        let allOrders = [];
-
-        let selectedOrder = null;
-
-
-        /* ==========================================
-           PRODUCTS
-        ========================================== */
-
-        let allProducts = [];
-
-        let editingProductId = null;
-
-
-        /* ==========================================
-           FORMAT MONEY
-        ========================================== */
-
-        function formatMoney(amount) {
-
-            return new Intl.NumberFormat(
-                "en-RW"
-            ).format(amount || 0) + " RWF";
-
-        }
-
-
-        /* ==========================================
-           FORMAT STATUS
-        ========================================== */
-
-        function formatStatus(status) {
-
-            if (!status) {
-
-                return "Pending";
-
+            if (!isAdminRequest) {
+                return adminOriginalFetch(input, init);
             }
 
-            return status
-                .replace(/_/g, " ")
-                .replace(/\b\w/g, letter =>
-                    letter.toUpperCase()
-                );
+            const token = sessionStorage.getItem("adminToken");
 
-        }
-
-
-        /* ==========================================
-           SERVER CONNECTION
-        ========================================== */
-
-        async function checkServerConnection() {
-
-            const status =
-                document.getElementById(
-                    "connection-status"
-                );
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/api/health`
-                    );
-
-                if (!response.ok) {
-
-                    throw new Error(
-                        "Server unavailable"
-                    );
-
-                }
-
-                status.textContent =
-                    "✓ Connected to Flowers & Gifts server";
-
-                status.style.background =
-                    "#e8f7ee";
-
-                status.style.color =
-                    "#176b3a";
-
-            } catch (error) {
-
-                console.error(error);
-
-                status.textContent =
-                    "✕ Cannot connect to Flowers & Gifts server";
-
-                status.style.background =
-                    "#fdeaea";
-
-                status.style.color =
-                    "#a12626";
-
+            if (!token) {
+                window.location.replace("./login.html");
+                throw new Error("Admin login required.");
             }
 
-        }
+            const headers = new Headers(
+                input instanceof Request ? input.headers : undefined
+            );
 
-
-        /* ==========================================
-           LOAD DASHBOARD STATS
-        ========================================== */
-
-        async function loadDashboardStats() {
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/api/admin/stats`
-                    );
-
-                const data =
-                    await response.json();
-
-                if (!data.success) {
-
-                    throw new Error(
-                        data.message
-                    );
-
-                }
-
-                const stats =
-                    data.stats;
-
-                document.getElementById(
-                    "today-sales"
-                ).textContent =
-                    formatMoney(
-                        stats.todaySales
-                    );
-
-                document.getElementById(
-                    "total-orders"
-                ).textContent =
-                    stats.totalOrders;
-
-                document.getElementById(
-                    "total-products"
-                ).textContent =
-                    stats.totalProducts;
-
-                document.getElementById(
-                    "low-stock"
-                ).textContent =
-                    stats.lowStockProducts;
-
-            } catch (error) {
-
-                console.error(
-                    "Stats error:",
-                    error
-                );
-
+            if (init.headers) {
+                new Headers(init.headers).forEach((value, key) => {
+                    headers.set(key, value);
+                });
             }
 
-        }
-
-
-        /* ==========================================
-           LOAD ORDERS
-        ========================================== */
-
-        async function loadOrders() {
-
-            const container =
-                document.getElementById(
-                    "recent-orders"
-                );
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/api/admin/orders`
-                    );
-
-                const data =
-                    await response.json();
-
-                if (!data.success) {
-
-                    throw new Error(
-                        data.message
-                    );
-
-                }
-
-                allOrders =
-                    data.orders || [];
-
-                if (allOrders.length === 0) {
-
-                    container.innerHTML =
-                        `
-                        <div>
-                            No orders found.
-                        </div>
-                        `;
-
-                    return;
-
-                }
-
-                const recentOrders =
-                    allOrders.slice(0, 10);
-
-                container.innerHTML =
-                    recentOrders.map(order => {
-
-                        const orderId =
-                            order._id
-                                .toString()
-                                .slice(-8)
-                                .toUpperCase();
-
-                        const customer =
-                            order.customer?.name ||
-                            "Unknown";
-
-                        return `
-                            <div
-                                class="clickable-order"
-                                onclick="showOrderDetails('${order._id}')"
-                            >
-
-                                <b>
-                                    ${orderId}
-                                </b>
-
-                                <span>
-                                    ${customer}
-                                </span>
-
-                                <span>
-                                    ${formatMoney(order.total)}
-                                </span>
-
-                                <span class="status">
-                                    ${formatStatus(order.orderStatus)}
-                                </span>
-
-                            </div>
-                        `;
-
-                    }).join("");
-
-            } catch (error) {
-
-                console.error(
-                    "Orders error:",
-                    error
-                );
-
-                container.innerHTML =
-
-                    `
-                    <div class="error-message">
-                        Could not load orders.
-                    </div>
-                    `;
-
-            }
-
-        }
-
-
-        /* ==========================================
-           SHOW ORDER DETAILS
-        ========================================== */
-
-        function showOrderDetails(orderId) {
-
-            selectedOrder =
-                allOrders.find(
-                    order =>
-                        order._id === orderId
-                );
-
-            if (!selectedOrder) {
-
-                alert("Order not found.");
-
-                return;
-
-            }
-
-            const details =
-                document.getElementById(
-                    "order-details"
-                );
-
-            const content =
-                document.getElementById(
-                    "order-details-content"
-                );
-
-            const order =
-                selectedOrder;
-
-            const customer =
-                order.customer || {};
-
-            const recipient =
-                order.recipient || {};
-
-            const delivery =
-                order.delivery || {};
-
-            const items =
-                order.items || [];
-
-            const orderNumber =
-                order._id
-                    .toString()
-                    .slice(-8)
-                    .toUpperCase();
-
-
-            const itemsHTML =
-                items.map(item => `
-
-                    <div class="order-item">
-
-                        <span>
-
-                            ${item.name}
-
-                            × ${item.quantity}
-
-                        </span>
-
-                        <strong>
-
-                            ${formatMoney(
-                                item.price *
-                                item.quantity
-                            )}
-
-                        </strong>
-
-                    </div>
-
-                `).join("");
-
-
-            content.innerHTML = `
-
-                <div class="order-info">
-
-                    <div class="info-box">
-
-                        <strong>
-                            Order
-                        </strong>
-
-                        #${orderNumber}
-
-                    </div>
-
-
-                    <div class="info-box">
-
-                        <strong>
-                            Customer
-                        </strong>
-
-                        ${customer.name || "N/A"}
-
-                        <br>
-
-                        ${customer.phone || "N/A"}
-
-                        ${
-                            customer.email
-                                ? `<br>${customer.email}`
-                                : ""
-                        }
-
-                    </div>
-
-
-                    <div class="info-box">
-
-                        <strong>
-                            Recipient
-                        </strong>
-
-                        ${recipient.name || "N/A"}
-
-                        <br>
-
-                        ${recipient.phone || "N/A"}
-
-                    </div>
-
-
-                    <div class="info-box">
-
-                        <strong>
-                            Delivery
-                        </strong>
-
-                        ${delivery.location || "N/A"}
-
-                        <br>
-
-                        ${delivery.date || "N/A"}
-
-                    </div>
-
-                </div>
-
-
-                <h3>
-                    Products
-                </h3>
-
-
-                <div class="order-items">
-
-                    ${
-                        itemsHTML ||
-                        "<p>No products found.</p>"
-                    }
-
-                </div>
-
-
-                <div class="info-box">
-
-                    <p>
-
-                        Subtotal:
-
-                        <strong>
-                            ${formatMoney(order.subtotal)}
-                        </strong>
-
-                    </p>
-
-
-                    <p>
-
-                        Delivery:
-
-                        <strong>
-                            ${formatMoney(order.deliveryFee)}
-                        </strong>
-
-                    </p>
-
-
-                    <p>
-
-                        Total:
-
-                        <strong>
-                            ${formatMoney(order.total)}
-                        </strong>
-
-                    </p>
-
-
-                    <p>
-
-                        Payment method:
-
-                        <strong>
-                            ${order.paymentMethod || "N/A"}
-                        </strong>
-
-                    </p>
-
-
-                    ${
-                        order.giftMessage
-                            ? `
-                                <p>
-
-                                    Gift message:
-
-                                    <strong>
-                                        ${order.giftMessage}
-                                    </strong>
-
-                                </p>
-                            `
-                            : ""
-                    }
-
-                </div>
-
-
-                <div class="order-controls">
-
-                    <div>
-
-                        <label for="order-status">
-                            Order Status
-                        </label>
-
-                        <select id="order-status">
-
-                            <option
-                                value="pending"
-                                ${
-                                    order.orderStatus === "pending"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Pending
-                            </option>
-
-
-                            <option
-                                value="confirmed"
-                                ${
-                                    order.orderStatus === "confirmed"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Confirmed
-                            </option>
-
-
-                            <option
-                                value="preparing"
-                                ${
-                                    order.orderStatus === "preparing"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Preparing
-                            </option>
-
-
-                            <option
-                                value="out_for_delivery"
-                                ${
-                                    order.orderStatus === "out_for_delivery"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Out for Delivery
-                            </option>
-
-
-                            <option
-                                value="delivered"
-                                ${
-                                    order.orderStatus === "delivered"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Delivered
-                            </option>
-
-
-                            <option
-                                value="cancelled"
-                                ${
-                                    order.orderStatus === "cancelled"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Cancelled
-                            </option>
-
-                        </select>
-
-                    </div>
-
-
-                    <div>
-
-                        <label for="payment-status">
-                            Payment Status
-                        </label>
-
-                        <select id="payment-status">
-
-                            <option
-                                value="pending"
-                                ${
-                                    order.paymentStatus === "pending"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Pending
-                            </option>
-
-
-                            <option
-                                value="paid"
-                                ${
-                                    order.paymentStatus === "paid"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Paid
-                            </option>
-
-
-                            <option
-                                value="failed"
-                                ${
-                                    order.paymentStatus === "failed"
-                                        ? "selected"
-                                        : ""
-                                }
-                            >
-                                Failed
-                            </option>
-
-                        </select>
-
-                    </div>
-
-                </div>
-
-
-                <div class="admin-buttons">
-
-                    <button
-                        class="admin-button primary"
-                        onclick="saveOrderChanges()"
-                    >
-                        Save Changes
-                    </button>
-
-
-                    <button
-                        class="admin-button secondary"
-                        onclick="closeOrderDetails()"
-                    >
-                        Close
-                    </button>
-
-                </div>
-
-            `;
-
-
-            details.style.display =
-                "block";
-
-            details.scrollIntoView({
-                behavior: "smooth"
+            headers.set("Authorization", `Bearer ${token}`);
+
+            const response = await adminOriginalFetch(input, {
+                ...init,
+                headers
             });
 
-        }
-
-
-        /* ==========================================
-           SAVE ORDER CHANGES
-        ========================================== */
-
-        async function saveOrderChanges() {
-
-            if (!selectedOrder) {
-
-                return;
-
+            if (response.status === 401) {
+                sessionStorage.removeItem("adminToken");
+                window.location.replace("./login.html");
             }
 
-            const orderStatus =
-                document.getElementById(
-                    "order-status"
-                ).value;
+            return response;
+        };
 
-            const paymentStatus =
-                document.getElementById(
-                    "payment-status"
-                ).value;
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/api/admin/orders/${selectedOrder._id}/status`,
-                        {
-
-                            method: "PUT",
-
-                            headers: {
-
-                                "Content-Type":
-                                    "application/json"
-
-                            },
-
-                            body:
-                                JSON.stringify({
-
-                                    orderStatus:
-                                        orderStatus,
-
-                                    paymentStatus:
-                                        paymentStatus
-
-                                })
-
-                        }
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!data.success) {
-
-                    throw new Error(
-                        data.message ||
-                        "Failed to update order."
-                    );
-
-                }
-
-
-                alert(
-                    "Order updated successfully!"
-                );
-
-
-                const index =
-                    allOrders.findIndex(
-                        order =>
-                            order._id ===
-                            selectedOrder._id
-                    );
-
-
-                if (index !== -1) {
-
-                    allOrders[index] =
-                        data.order;
-
-                }
-
-
-                selectedOrder =
-                    data.order;
-
-
-                await loadDashboardStats();
-
-                await loadOrders();
-
-
-                showOrderDetails(
-                    selectedOrder._id
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "Update order error:",
-                    error
-                );
-
-                alert(
-                    "Could not update the order."
-                );
-
-            }
-
+        if (!sessionStorage.getItem("adminToken")) {
+            window.location.replace("./login.html");
         }
 
-
-        /* ==========================================
-           CLOSE ORDER DETAILS
-        ========================================== */
-
-        function closeOrderDetails() {
-
-            document.getElementById(
-                "order-details"
-            ).style.display =
-                "none";
-
-            selectedOrder = null;
-
-        }
-
-
-        /* =====================================================
-           PRODUCT MANAGEMENT
-        ===================================================== */
-
-
-        /* ==========================================
-           SHOW PRODUCT MESSAGE
-        ========================================== */
-
-        function showProductMessage(
-            message,
-            type = "success"
-        ) {
-
-            const element =
-                document.getElementById(
-                    "product-message"
-                );
-
-
-            element.textContent =
-                message;
-
-
-            element.className =
-                `product-message ${type}`;
-
-
-            setTimeout(() => {
-
-                element.className =
-                    "product-message";
-
-            }, 4000);
-
-        }
-
-
-        /* ==========================================
-           LOAD PRODUCTS
-        ========================================== */
-
-        async function loadProducts() {
-
-            const container =
-                document.getElementById(
-                    "products-container"
-                );
-
-
-            container.innerHTML = `
-
-                <div class="loading">
-                    Loading products...
-                </div>
-
-            `;
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        `${API_URL}/api/admin/products`
-                    );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!data.success) {
-
-                    throw new Error(
-                        data.message
-                    );
-
-                }
-
-
-                allProducts =
-                    data.products || [];
-
-
-                renderProducts();
-
-
-            } catch (error) {
-
-                console.error(
-                    "Products error:",
-                    error
-                );
-
-
-                container.innerHTML = `
-
-                    <div class="error-message">
-                        Could not load products.
-                    </div>
-
-                `;
-
-            }
-
-        }
-
-
-        /* ==========================================
-           RENDER PRODUCTS
-        ========================================== */
-function renderProducts() {
-
-    const container =
-        document.getElementById("products-container");
-
-    if (allProducts.length === 0) {
-
-        container.innerHTML = `
-            <div class="loading">
-                No products found.
-            </div>
+        const logoutButton = document.createElement("button");
+        logoutButton.type = "button";
+        logoutButton.textContent = "Log out";
+        logoutButton.setAttribute("aria-label", "Log out of admin dashboard");
+        logoutButton.style.cssText = `
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            z-index: 99999;
+            padding: 11px 18px;
+            border: none;
+            border-radius: 8px;
+            background: #873f5b;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.15);
         `;
 
-        return;
-    }
+        logoutButton.addEventListener("click", () => {
+            sessionStorage.removeItem("adminToken");
+            window.location.replace("./login.html");
+        });
 
-    container.innerHTML = `
+        document.body.appendChild(logoutButton);
 
-        <table class="product-table">
+        let allProducts = [];
+        let editingProductId = null;
 
-            <thead>
+        function formatMoney(amount) {
+            if (amount === null || amount === undefined || amount === "") {
+                return "Not set";
+            }
 
-                <tr>
+            const number = Number(amount);
 
-                    <th>Photo</th>
+            if (!Number.isFinite(number)) {
+                return "Not set";
+            }
 
-                    <th>Product</th>
+            return new Intl.NumberFormat("en-RW").format(number) + " RWF";
+        }
 
-                    <th>Category</th>
+        async function checkServerConnection() {
+            const status = document.getElementById("connection-status");
 
-                    <th>Price</th>
+            try {
+                const response = await fetch(`${API_URL}/api/health`);
 
-                    <th>Stock</th>
-
-                    <th>Availability</th>
-
-                    <th>Actions</th>
-
-                </tr>
-
-            </thead>
-
-            <tbody>
-
-                ${
-                    allProducts.map(product => {
-
-                        const stockClass =
-                            product.stock <= 5
-                                ? "stock-low"
-                                : "stock-good";
-
-                        const availabilityClass =
-                            product.available
-                                ? "availability-on"
-                                : "availability-off";
-
-                        const availabilityText =
-                            product.available
-                                ? "Available"
-                                : "Hidden";
-
-                        const productImage = product.image
-                            ? `
-                                <img
-                                    src="${product.image}"
-                                    alt="${product.name}"
-                                    style="
-                                        width: 60px;
-                                        height: 60px;
-                                        object-fit: cover;
-                                        border-radius: 8px;
-                                        border: 1px solid #ddd;
-                                    "
-                                >
-                              `
-                            : `
-                                <div
-                                    style="
-                                        width: 60px;
-                                        height: 60px;
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        background: #f5f5f5;
-                                        border-radius: 8px;
-                                        font-size: 12px;
-                                        color: #888;
-                                    "
-                                >
-                                    No image
-                                </div>
-                              `;
-
-                        return `
-
-                            <tr>
-
-                                <td>
-                                    ${productImage}
-                                </td>
-
-                                <td>
-                                    <strong>
-                                        ${product.name}
-                                    </strong>
-                                </td>
-
-                                <td>
-                                    ${product.category}
-                                </td>
-
-                                <td>
-                                    ${formatMoney(product.price)}
-                                </td>
-
-                                <td>
-
-                                    <span
-                                        class="${stockClass}"
-                                    >
-                                        ${product.stock}
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <span
-                                        class="${availabilityClass}"
-                                    >
-                                        ${availabilityText}
-                                    </span>
-
-                                </td>
-
-                                <td>
-
-                                    <div class="product-actions">
-
-                                        <button
-                                            class="small-button edit-button"
-                                            onclick="editProduct('${product._id}')"
-                                        >
-                                            Edit
-                                        </button>
-
-                                        <button
-                                            class="small-button delete-button"
-                                            onclick="deleteProduct('${product._id}')"
-                                        >
-                                            Delete
-                                        </button>
-
-                                    </div>
-
-                                </td>
-
-                            </tr>
-
-                        `;
-
-                    }).join("")
+                if (!response.ok) {
+                    throw new Error("Server unavailable");
                 }
 
-            </tbody>
+                status.textContent = "✓ Connected to Flowers & Gifts server";
+                status.style.background = "#e8f7ee";
+                status.style.color = "#176b3a";
+            } catch (error) {
+                console.error("Connection error:", error);
+                status.textContent = "✕ Cannot connect to Flowers & Gifts server";
+                status.style.background = "#fdeaea";
+                status.style.color = "#a12626";
+            }
+        }
 
-        </table>
+        function showProductMessage(message, type = "success") {
+            const element = document.getElementById("product-message");
 
-    `;
-}
+            element.textContent = message;
+            element.className = `product-message ${type}`;
 
-        /* ==========================================
-           OPEN ADD PRODUCT FORM
-        ========================================== */
+            setTimeout(() => {
+                element.className = "product-message";
+            }, 5000);
+        }
+
+        async function loadProducts() {
+            const container = document.getElementById("products-container");
+            container.innerHTML = '<div class="loading">Loading products...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/admin/products`);
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Could not load products.");
+                }
+
+                allProducts = data.products || [];
+                renderProducts();
+            } catch (error) {
+                console.error("Products error:", error);
+                container.innerHTML = `
+                    <div class="error-message">
+                        Could not load products. ${escapeHTML(error.message)}
+                    </div>
+                `;
+            }
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? "").replace(/[&<>"']/g, character => ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;"
+            })[character]);
+        }
+
+        function renderProducts() {
+            const container = document.getElementById("products-container");
+
+            if (allProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="loading">
+                        No products found. Click “Add Product” to add your first product.
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>Photo</th>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Price</th>
+                            <th>Availability</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allProducts.map(product => {
+                            const imageHTML = product.image
+                                ? `<img src="${escapeHTML(product.image)}"
+                                    alt="${escapeHTML(product.name)}"
+                                    style="width:60px;height:60px;object-fit:cover;border-radius:8px;">`
+                                : "No image";
+
+                            const available = product.available !== false;
+
+                            return `
+                                <tr>
+                                    <td>${imageHTML}</td>
+                                    <td><strong>${escapeHTML(product.name)}</strong></td>
+                                    <td>${escapeHTML(product.category)}</td>
+                                    <td>${formatMoney(product.price)}</td>
+                                    <td class="${available ? "availability-on" : "availability-off"}">
+                                        ${available ? "Available" : "Hidden"}
+                                    </td>
+                                    <td>
+                                        <div class="product-actions">
+                                            <button
+                                                class="small-button edit-button"
+                                                onclick="editProduct('${escapeHTML(product._id)}')"
+                                            >Edit</button>
+                                            <button
+                                                class="small-button delete-button"
+                                                onclick="deleteProduct('${escapeHTML(product._id)}')"
+                                            >Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join("")}
+                    </tbody>
+                </table>
+            `;
+        }
 
         function openAddProductForm() {
-
             editingProductId = null;
 
+            document.getElementById("product-form-title").textContent = "Add New Product";
+            document.getElementById("save-product-button").textContent = "Save Product";
+            document.getElementById("product-manager-form").reset();
+            document.getElementById("product-available").checked = true;
 
-            document.getElementById(
-                "product-form-title"
-            ).textContent =
-                "Add New Product";
+            const preview = document.getElementById("product-image-preview");
+            preview.src = "";
+            preview.style.display = "none";
 
-
-            document.getElementById(
-                "save-product-button"
-            ).textContent =
-                "Save Product";
-
-
-            document.getElementById(
-                "product-manager-form"
-            ).reset();
-
-
-            document.getElementById(
-                "product-available"
-            ).checked = true;
-
-
-            document.getElementById(
-                "product-form"
-            ).classList.add("active");
-
-
-            document.getElementById(
-                "product-form"
-            ).scrollIntoView({
-                behavior: "smooth"
+            document.getElementById("product-form").classList.add("active");
+            document.getElementById("product-form").scrollIntoView({
+                behavior: "smooth",
+                block: "start"
             });
-
         }
-
-
-        /* ==========================================
-           CLOSE PRODUCT FORM           
-        ========================================== */
 
         function closeProductForm() {
-
             editingProductId = null;
-
-
-            document.getElementById(
-                "product-manager-form"
-            ).reset();
-
-
-            document.getElementById(
-                "product-available"
-            ).checked = true;
-
-
-            document.getElementById(
-                "product-form"
-            ).classList.remove("active");
-
-        }
-
-/* ==========================================
-   EDIT PRODUCT
-========================================== */
-
-function editProduct(productId) {
-
-    const product = allProducts.find(
-        product => product._id === productId
-    );
-
-    if (!product) {
-        alert("Product not found.");
-        return;
-    }
-
-    editingProductId = productId;
-
-    const formTitle =
-        document.getElementById("product-form-title");
-
-    const nameInput =
-        document.getElementById("product-name");
-
-    const categoryInput =
-        document.getElementById("product-category");
-
-    const occasionInput =
-        document.getElementById("product-occasion");
-
-    const priceInput =
-        document.getElementById("product-price");
-
-    const descriptionInput =
-        document.getElementById("product-description");
-
-    const availableInput =
-        document.getElementById("product-available");
-
-    const imageFileInput =
-        document.getElementById("product-image-file");
-
-    const preview =
-        document.getElementById("product-image-preview");
-
-    const saveButton =
-        document.getElementById("save-product-button");
-
-    const form =
-        document.getElementById("product-form");
-
-    if (
-        !formTitle ||
-        !nameInput ||
-        !categoryInput ||
-        !occasionInput ||
-        !priceInput ||
-        !descriptionInput ||
-        !availableInput ||
-        !imageFileInput ||
-        !preview ||
-        !saveButton ||
-        !form
-    ) {
-        console.error(
-            "EDIT PRODUCT ERROR: Missing form element.",
-            {
-                formTitle,
-                nameInput,
-                categoryInput,
-                occasionInput,
-                priceInput,
-                descriptionInput,
-                availableInput,
-                imageFileInput,
-                preview,
-                saveButton,
-                form
-            }
-        );
-
-        alert("There is a problem with the product edit form.");
-        return;
-    }
-
-    formTitle.textContent = "Edit Product";
-
-    nameInput.value = product.name || "";
-
-    categoryInput.value = product.category || "";
-
-    occasionInput.value = product.occasion || "";
-
-    priceInput.value = product.price ?? "";
-
-    descriptionInput.value = product.description || "";
-
-    availableInput.checked =
-        product.available !== false;
-
-    imageFileInput.value = "";
-
-    if (product.image) {
-
-        preview.src = product.image;
-        preview.style.display = "block";
-
-    } else {
-
-        preview.src = "";
-        preview.style.display = "none";
-
-    }
-
-    saveButton.textContent = "Update Product";
-
-    form.classList.add("active");
-
-    form.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-    });
-}
-    
-
-
-        /* ==========================================
-           SAVE PRODUCT
-        ========================================== */
-
-
-async function saveProduct(event) {
-    event.preventDefault();
-
-    const API_BASE_URL = "https://flowers-gifts-rwanda.onrender.com";
-
-    const name = document.getElementById("product-name").value.trim();
-    const category = document.getElementById("product-category").value;
-    const occasion = document.getElementById("product-occasion").value;
-    const price = document.getElementById("product-price").value;
-    const description = document.getElementById("product-description").value.trim();
-    const available = document.getElementById("product-available").checked;
-
-    const imageInput = document.getElementById("product-image-file");
-    const imageFile = imageInput ? imageInput.files[0] : null;
-
-    if (!name || !category || price === "") {
-        alert("Please fill in the product name, category, and price.");
-        return;
-    }
-
-    if (Number(price) < 0) {
-        alert("Price cannot be negative.");
-        return;
-    }
-
-    try {
-        let response;
-        const isEditing = Boolean(editingProductId);
-
-        // ADD NEW PRODUCT
-        if (!isEditing) {
-            const formData = new FormData();
-
-            formData.append("name", name);
-            formData.append("category", category);
-            formData.append("occasion", occasion);
-            formData.append("price", price);
-            formData.append("description", description);
-            formData.append("available", String(available));
-
-            if (imageFile) {
-                formData.append("image", imageFile);
-            }
-
-            response = await fetch(
-                `${API_BASE_URL}/api/admin/products`,
-                {
-                    method: "POST",
-                    body: formData
-                }
-            );
-        }
-
-        // EDIT EXISTING PRODUCT
-        else {
-            const existingProduct = allProducts.find(
-                product => product._id === editingProductId
-            );
-
-            if (!existingProduct) {
-                throw new Error("Could not find the product being edited.");
-            }
-
-            // EDIT + NEW IMAGE
-            if (imageFile) {
-                const formData = new FormData();
-
-                formData.append("name", name);
-                formData.append("category", category);
-                formData.append("occasion", occasion);
-                formData.append("price", price);
-                formData.append("description", description);
-                formData.append("available", String(available));
-                formData.append("image", imageFile);
-
-                response = await fetch(
-                    `${API_BASE_URL}/api/admin/products/${editingProductId}`,
-                    {
-                        method: "PUT",
-                        body: formData
-                    }
-                );
-            }
-
-            // EDIT WITHOUT CHANGING IMAGE
-            else {
-                const productData = {
-                    name: name,
-                    category: category,
-                    occasion: occasion,
-                    price: Number(price),
-                    description: description,
-                    available: available
-                };
-
-                response = await fetch(
-                    `${API_BASE_URL}/api/admin/products/${editingProductId}`,
-                    {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(productData)
-                    }
-                );
-            }
-        }
-
-        // HANDLE RESPONSE
-        const data = await response.json();
-
-        if (!response.ok || !data.success) {
-            throw new Error(
-                data.message || "Failed to save product."
-            );
-        }
-
-        alert(
-            isEditing
-                ? "Product updated successfully!"
-                : "Product added successfully!"
-        );
-
-        // RESET FORM
-        const productForm = document.getElementById("product-manager-form");
-
-        if (productForm && typeof productForm.reset === "function") {
-            productForm.reset();
-        }
-
-        const preview = document.getElementById("product-image-preview");
-
-        if (preview) {
+            document.getElementById("product-manager-form").reset();
+            document.getElementById("product-available").checked = true;
+            document.getElementById("product-form").classList.remove("active");
+
+            const preview = document.getElementById("product-image-preview");
             preview.src = "";
             preview.style.display = "none";
         }
 
-        editingProductId = null;
-
-        closeProductForm();
-
-        await loadProducts();
-
-    } catch (error) {
-        console.error("Save product error:", error);
-
-        alert(
-            "Failed to save product: " +
-            error.message
-        );
-    }
-}
-        /* ==========================================
-           DELETE PRODUCT
-        ========================================== */
-
-        async function deleteProduct(productId) {
-
-            const product =
-                allProducts.find(
-                    item =>
-                        item._id === productId
-                );
-
+        function editProduct(productId) {
+            const product = allProducts.find(item => item._id === productId);
 
             if (!product) {
-
-                alert(
-                    "Product not found."
-                );
-
+                alert("Product not found.");
                 return;
-
             }
 
+            editingProductId = productId;
 
-            const confirmed =
-                confirm(
-                    `Are you sure you want to delete "${product.name}"?`
-                );
+            document.getElementById("product-form-title").textContent = "Edit Product";
+            document.getElementById("product-name").value = product.name || "";
+            document.getElementById("product-category").value = product.category || "other";
+            document.getElementById("product-occasion").value = product.occasion || "";
+            document.getElementById("product-price").value =
+                product.price ?? "";
+            document.getElementById("product-description").value =
+                product.description || "";
+            document.getElementById("product-available").checked =
+                product.available !== false;
+            document.getElementById("product-image-file").value = "";
+            document.getElementById("save-product-button").textContent = "Update Product";
 
+            const preview = document.getElementById("product-image-preview");
 
-            if (!confirmed) {
-
-                return;
-
+            if (product.image) {
+                preview.src = product.image;
+                preview.style.display = "block";
+            } else {
+                preview.src = "";
+                preview.style.display = "none";
             }
 
+            document.getElementById("product-form").classList.add("active");
+            document.getElementById("product-form").scrollIntoView({
+                behavior: "smooth",
+                block: "start"
+            });
+        }
+
+        async function saveProduct(event) {
+            event.preventDefault();
+
+            const name = document.getElementById("product-name").value.trim();
+            const category = document.getElementById("product-category").value;
+            const occasion = document.getElementById("product-occasion").value;
+            const price = document.getElementById("product-price").value.trim();
+            const description = document.getElementById("product-description").value.trim();
+            const available = document.getElementById("product-available").checked;
+            const imageInput = document.getElementById("product-image-file");
+            const imageFile = imageInput.files[0];
+
+            if (!name || !category) {
+                alert("Please enter a product name and choose a category.");
+                return;
+            }
+
+            if (price !== "" && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
+                alert("Enter a valid non-negative price, or leave it blank.");
+                return;
+            }
+
+            const saveButton = document.getElementById("save-product-button");
+            saveButton.disabled = true;
+            saveButton.textContent = "Saving...";
 
             try {
+                const isEditing = Boolean(editingProductId);
+                let response;
 
-                const response =
-                    await fetch(
+                if (!isEditing || imageFile) {
+                    const formData = new FormData();
 
-                        `${API_URL}/api/admin/products/${productId}`,
+                    formData.append("name", name);
+                    formData.append("category", category);
+                    formData.append("occasion", occasion);
+                    formData.append("description", description);
+                    formData.append("available", String(available));
 
+                    if (price !== "") {
+                        formData.append("price", price);
+                    }
+
+                    if (imageFile) {
+                        formData.append("image", imageFile);
+                    }
+
+                    const url = isEditing
+                        ? `${API_URL}/api/admin/products/${editingProductId}`
+                        : `${API_URL}/api/admin/products`;
+
+                    response = await fetch(url, {
+                        method: isEditing ? "PUT" : "POST",
+                        body: formData
+                    });
+                } else {
+                    const productData = {
+                        name,
+                        category,
+                        occasion,
+                        description,
+                        available
+                    };
+
+                    if (price !== "") {
+                        productData.price = Number(price);
+                    }
+
+                    response = await fetch(
+                        `${API_URL}/api/admin/products/${editingProductId}`,
                         {
-
-                            method: "DELETE"
-
+                            method: "PUT",
+                            headers: {
+                                "Content-Type": "application/json"
+                            },
+                            body: JSON.stringify(productData)
                         }
-
                     );
-
-
-                const data =
-                    await response.json();
-
-
-                if (!data.success) {
-
-                    throw new Error(
-                        data.message ||
-                        "Failed to delete product."
-                    );
-
                 }
 
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Failed to save product.");
+                }
 
                 showProductMessage(
-
-                    "Product deleted successfully.",
-
+                    isEditing
+                        ? "Product updated successfully."
+                        : "Product added successfully.",
                     "success"
-
                 );
 
-
+                closeProductForm();
                 await loadProducts();
-
-                await loadDashboardStats();
-
-
             } catch (error) {
-
-                console.error(
-                    "Delete product error:",
-                    error
-                );
-
-
+                console.error("Save product error:", error);
                 showProductMessage(
-
-                    error.message ||
-                    "Could not delete product.",
-
+                    `Failed to save product: ${error.message}`,
                     "error"
-
                 );
+            } finally {
+                saveButton.disabled = false;
+                saveButton.textContent = editingProductId
+                    ? "Update Product"
+                    : "Save Product";
+            }
+        }
 
+        async function deleteProduct(productId) {
+            const product = allProducts.find(item => item._id === productId);
+
+            if (!product) {
+                alert("Product not found.");
+                return;
             }
 
+            if (!confirm(`Are you sure you want to delete "${product.name}"?`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(
+                    `${API_URL}/api/admin/products/${productId}`,
+                    { method: "DELETE" }
+                );
+
+                const data = await response.json();
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Failed to delete product.");
+                }
+
+                showProductMessage("Product deleted successfully.", "success");
+                await loadProducts();
+            } catch (error) {
+                console.error("Delete product error:", error);
+                showProductMessage(error.message, "error");
+            }
         }
 
+        // Product photo preview
+        const productImageInput = document.getElementById("product-image-file");
+        const productImagePreview = document.getElementById("product-image-preview");
 
-        /* ==========================================
-           INITIALIZE DASHBOARD
-        ========================================== */
+        productImageInput.addEventListener("change", function () {
+            const file = this.files[0];
+
+            if (!file) {
+                productImagePreview.src = "";
+                productImagePreview.style.display = "none";
+                return;
+            }
+
+            if (!file.type.startsWith("image/")) {
+                alert("Please select an image file.");
+                this.value = "";
+                productImagePreview.style.display = "none";
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                alert("The photo must be 5 MB or smaller.");
+                this.value = "";
+                productImagePreview.style.display = "none";
+                return;
+            }
+
+            productImagePreview.src = URL.createObjectURL(file);
+            productImagePreview.style.display = "block";
+        });
 
         async function initializeDashboard() {
-
             await checkServerConnection();
-
-            await loadDashboardStats();
-
-            await loadOrders();
-
             await loadProducts();
-
         }
 
-// ==========================================
-// PRODUCT PHOTO PREVIEW
-// ==========================================
-
-const productImageInput =
-    document.getElementById("product-image-file");
-
-const productImagePreview =
-    document.getElementById("product-image-preview");
-
-productImageInput.addEventListener("change", function () {
-
-    const file = this.files[0];
-
-    if (!file) {
-        productImagePreview.src = "";
-        productImagePreview.style.display = "none";
-        return;
-    }
-
-    if (!file.type.startsWith("image/")) {
-        alert("Please select an image file.");
-        this.value = "";
-        productImagePreview.style.display = "none";
-        return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-        alert("The photo must be 5 MB or smaller.");
-        this.value = "";
-        productImagePreview.style.display = "none";
-        return;
-    }
-
-    productImagePreview.src = URL.createObjectURL(file);
-    productImagePreview.style.display = "block";
-
-});
-
-
         initializeDashboard();
-
     </script>
-
-
 </body>
-
 </html>
-

@@ -629,7 +629,7 @@ footer {
 
 
     .hero-art {
-        min-height: 350px;
+        min-height: relative;
     }
 
 
@@ -975,31 +975,38 @@ footer {
    HERO WHATSAPP CONTACT
 ========================================== */
 
-.hero-contact {
-    margin-bottom: 10px;
-    text-align: center;
+
+
+
+.hero-art {
+    position: relative;
 }
 
+.hero-contact {
+    position: absolute;
+    top: 13px;
+    right: 40px;
+    z-index: 10;
+}
 
 .hero-contact a {
-    display: inline-block;
-    background: #25D366;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #e84393;
+    border-radius: 50%;
     text-decoration: none;
-    font-weight: 600;
-    font-size: 0.9rem;
-    box-shadow: 0 5px 15px rgba(37, 211, 102, 0.25);
-    transition: 0.2s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-
-.hero-contact a:hover {
-    background: #1ebe5d;
-    transform: translateY(-2px);
+.hero-contact img {
+    width: 25px;
+    height: 25px;
+    object-fit: contain;
+    display: block;
 }
-
 
 /* ==========================================
    FLOWER OCCASION CIRCLES

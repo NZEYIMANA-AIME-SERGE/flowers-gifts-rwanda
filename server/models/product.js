@@ -1,3 +1,4 @@
+
 const mongoose = require("mongoose");
 
 const productSchema = new mongoose.Schema(
@@ -13,10 +14,10 @@ const productSchema = new mongoose.Schema(
             default: ""
         },
 
+        // Allows blank prices, numeric prices, and text such as "Negotiable"
         price: {
-            type: Number,
-            required: true,
-            min: 0
+            type: String,
+            default: ""
         },
 
         category: {
@@ -24,11 +25,13 @@ const productSchema = new mongoose.Schema(
             required: true,
             trim: true
         },
-occasion: {
-    type: String,
-    default: "",
-    trim: true
-},
+
+        occasion: {
+            type: String,
+            default: "",
+            trim: true
+        },
+
         image: {
             type: String,
             default: ""
@@ -45,7 +48,6 @@ occasion: {
             default: true
         }
     },
-
     {
         timestamps: true
     }
