@@ -169,6 +169,8 @@ async function loadMongoProducts() {
 
 }
 
+renderFlowerOccasionImages();
+
 
 // ==========================================
 // SAVE CART
@@ -536,6 +538,48 @@ function filterFlowersByOccasion(
             .map(card)
             .join("");
 
+}
+
+
+function renderFlowerOccasionImages() {
+    document.querySelectorAll(".occasion-icon[data-occasion]")
+        .forEach(icon => {
+            const occasion = icon.dataset.occasion.toLowerCase().trim();
+
+            const matchingFlower = products.find(product =>
+                (product.category || "").toLowerCase().trim() === "flowers" &&
+                (product.occasion || "").toLowerCase().trim() === occasion &&
+                product.available !== false &&
+                typeof product.image === "string" &&
+                product.image.trim() !== ""
+            );
+
+            if (!matchingFlower) {
+                // Keep the original emoji already inside the element.
+                return;
+            }
+
+            const img = document.createElement("img");
+            img.src = matchingFlower.image;
+            img.alt = `${occasion} flowers`;
+            img.loading = "lazy";
+
+            img.onerror = () => {
+                // Restore the original emoji if the image URL fails.
+                icon.textContent = {
+                    birthday: "🎂",
+                    romance: "❤️",
+                    anniversary: "💍",
+                    graduation: "🎓",
+                    wedding: "💐",
+                    sympathy: "🕊️",
+                    "thank-you": "💝",
+                    "just-because": "🌷"
+                }[occasion] || "🌸";
+            };
+
+            icon.replaceChildren(img);
+        });
 }
 
 
@@ -1083,6 +1127,7 @@ function renderShop() {
 
     }
 
+    renderShopCategories();
 
     // ==========================================
     // GET CATEGORY FROM URL
@@ -1168,12 +1213,15 @@ function renderShop() {
                             .trim();
 
 
-                    return (
-                        productCategory ===
-                        category
-                            .toLowerCase()
-                            .trim()
-                    );
+                   const normalizedProductCategory =
+    productCategory === "fashion"
+        ? "shoes-and-bags"
+        : productCategory;
+
+return (
+    normalizedProductCategory ===
+    category.toLowerCase().trim()
+);
 
                 }
             );
@@ -1228,29 +1276,15 @@ function renderShop() {
         );
 
 
-    const categoryNames = {
-
-        flowers: "Flowers",
-
-        chocolates: "Chocolates",
-
-        perfumes: "Perfumes",
-
-        fashion: "Fashion",
-
-        cakes: "Cakes",
-
-        "teddy-bears": "Teddy Bears",
-
-        baskets: "Gift Baskets",
-
-        jewelry: "Jewelry",
-
-        "gift-sets": "Gift Sets",
-
-        other: "Other"
-
-    };
+   
+const categoryNames = {
+    flowers: "Flowers",
+    chocolates: "Chocolates",
+    "shoes-and-bags": "Shoes & Bags",
+    cakes: "Cakes",
+    "teddy-bears": "Teddy Bears",
+    jewelry: "Jewelry"
+};
 
 
     if (titleElement) {
@@ -1391,6 +1425,75 @@ function renderShop() {
 
     }
 
+}
+
+
+
+function renderShopCategories() {
+    const container = document.getElementById("shop-categories");
+
+    if (!container) return;
+
+    const categories = [
+        { value: "flowers", name: "Flowers", emoji: "🌹" },
+        { value: "chocolates", name: "Chocolates", emoji: "🍫" },
+        { value: "shoes-and-bags", name: "Shoes & Bags", emoji: "👟" },
+        { value: "cakes", name: "Cakes", emoji: "🎂" },
+        { value: "teddy-bears", name: "Teddy Bears", emoji: "🧸" },
+        { value: "jewelry", name: "Jewelry", emoji: "💎" }
+    ];
+
+    const params = new URLSearchParams(window.location.search);
+    const selectedCategory = params.get("category") || "";
+
+    container.innerHTML = categories.map(category => {
+        // Support older products still categorized as "fashion".
+        const matchingProduct = products.find(product => {
+            const storedCategory = String(product.category || "")
+                .trim()
+                .toLowerCase();
+
+            const normalizedCategory =
+                storedCategory === "fashion"
+                    ? "shoes-and-bags"
+                    : storedCategory;
+
+            return normalizedCategory === category.value
+                && product.available !== false
+                && product.image;
+        });
+
+        const imageHTML = matchingProduct
+            ? `<img src="${matchingProduct.image}" alt="${category.name}" loading="lazy">`
+            : `<span class="shop-category-emoji">${category.emoji}</span>`;
+
+        const isActive = selectedCategory === category.value;
+
+        return `
+            <button
+                type="button"
+                class="shop-category ${isActive ? "active" : ""}"
+                data-category="${category.value}"
+                aria-pressed="${isActive}"
+            >
+                <span class="shop-category-image">
+                    ${imageHTML}
+                </span>
+                <span class="shop-category-name">
+                    ${category.name}
+                </span>
+            </button>
+        `;
+    }).join("");
+
+    container.querySelectorAll(".shop-category").forEach(button => {
+        button.addEventListener("click", () => {
+            const category = button.dataset.category;
+
+            window.location.href =
+                `shop.html?category=${encodeURIComponent(category)}`;
+        });
+    });
 }
 
 
@@ -1694,392 +1797,216 @@ function addBundle(index) {
 // RENDER CART
 // ==========================================
 
+
 function renderCart() {
+    const element = document.getElementById("cart-items");
 
-    const element =
-        document.getElementById(
-            "cart-items"
-        );
-
-
-    if (!element) {
-
-        return;
-
-    }
-
+    if (!element) return;
 
     if (!cart.length) {
-
         element.innerHTML = `
-
             <div class="empty-cart">
-
-                <p>
-                    Your cart is empty.
-                </p>
-
-
-                <a href="shop.html">
-                    Start shopping →
-                </a>
-
+                <p>Your cart is empty.</p>
+                <a href="shop.html">Start shopping →</a>
             </div>
-
         `;
 
-
-        const summary =
-            document.getElementById(
-                "cart-summary"
-            );
-
-
-        if (summary) {
-
-            summary.innerHTML = "";
-
-        }
-
-
+        const summary = document.getElementById("cart-summary");
+        if (summary) summary.innerHTML = "";
         return;
-
     }
 
+    element.innerHTML = cart.map((item, index) => {
+        const isFlower =
+            (item.category || "").toLowerCase().trim() === "flowers";
 
-    element.innerHTML =
-        cart
-            .map(
-                (item, index) => {
+        const itemImage = item.image
+            ? `
+                <img
+                    src="${item.image}"
+                    alt="${item.name}"
+                    style="width:80px;height:80px;object-fit:cover;border-radius:8px;"
+                >
+              `
+            : `
+                <div style="width:80px;height:80px;display:flex;align-items:center;justify-content:center;font-size:32px;">
+                    ${item.emoji || "🎁"}
+                </div>
+              `;
 
-                    const itemImage =
-                        item.image
+        // Flowers have no fixed price in the cart.
+        // Custom gifts and all other products keep their existing pricing.
+        const itemTotal = isFlower
+            ? null
+            : Number(item.price) * item.quantity;
 
-                            ? `
-                                <img
-                                    src="${item.image}"
-                                    alt="${item.name}"
-                                    style="
-                                        width:80px;
-                                        height:80px;
-                                        object-fit:cover;
-                                        border-radius:8px;
-                                    "
-                                >
-                              `
-
-                            : `
-                                <div
-                                    style="
-                                        width:80px;
-                                        height:80px;
-                                        display:flex;
-                                        align-items:center;
-                                        justify-content:center;
-                                        font-size:32px;
-                                    "
-                                >
-                                    ${item.emoji || "🎁"}
+        const componentDetails =
+            item.isCustomGift && item.components
+                ? `
+                    <div style="margin-top:8px;font-size:13px;color:#666;">
+                        ${
+                            item.components.map(component => `
+                                <div>
+                                    • ${component.name} — ${money(component.price)}
                                 </div>
-                              `;
+                            `).join("")
+                        }
+                    </div>
+                  `
+                : "";
 
+        return `
+            <div class="cart-row">
+                <div>${itemImage}</div>
 
-                    const itemTotal =
-                        Number(item.price) *
-                        item.quantity;
+                <div>
+                    <strong>${item.name}</strong>
+                    ${componentDetails}
 
+                    <p>
+                        ${isFlower ? "Price to be discussed" : `${money(item.price)} each`}
+                    </p>
+                </div>
 
-                    // ==========================================
-                    // CUSTOM GIFT COMPONENTS
-                    // ==========================================
+                <div>
+                    <button onclick="changeQty(${index}, -1)">−</button>
+                    ${item.quantity}
+                    <button onclick="changeQty(${index}, 1)">+</button>
+                </div>
 
-                    const componentDetails =
-                        item.isCustomGift &&
-                        item.components
+                <strong>
+                    ${isFlower ? "To be discussed" : money(itemTotal)}
+                </strong>
 
-                            ? `
+                <button onclick="removeItem(${index})">
+                    Remove
+                </button>
+            </div>
+        `;
+    }).join("");
 
-                                <div
-                                    style="
-                                        margin-top:8px;
-                                        font-size:13px;
-                                        color:#666;
-                                    "
-                                >
+    // Exclude flowers from the calculated cart total.
+    // Other products and custom gifts retain their existing totals.
+    const total = cart.reduce((sum, item) => {
+        const isFlower =
+            (item.category || "").toLowerCase().trim() === "flowers";
 
-                                    ${
-                                        item.components
-                                            .map(
-                                                component => `
+        if (isFlower) return sum;
 
-                                                    <div>
+        return sum + Number(item.price) * item.quantity;
+    }, 0);
 
-                                                        • ${
-                                                            component.name
-                                                        }
-                                                        —
-                                                        ${
-                                                            money(
-                                                                component.price
-                                                            )
-                                                        }
+    const hasFlowers = cart.some(item =>
+        (item.category || "").toLowerCase().trim() === "flowers"
+    );
 
-                                                    </div>
-
-                                                `
-                                            )
-                                            .join("")
-                                    }
-
-                                </div>
-
-                              `
-
-                            : "";
-
-
-                    return `
-
-                        <div class="cart-row">
-
-                            <div>
-                                ${itemImage}
-                            </div>
-
-
-                            <div>
-
-                                <strong>
-                                    ${item.name}
-                                </strong>
-
-                                ${componentDetails}
-
-                                <p>
-                                    ${money(item.price)} each
-                                </p>
-
-                            </div>
-
-
-                            <div>
-
-                                <button
-                                    onclick="changeQty(${index}, -1)"
-                                >
-                                    −
-                                </button>
-
-                                ${item.quantity}
-
-                                <button
-                                    onclick="changeQty(${index}, 1)"
-                                >
-                                    +
-                                </button>
-
-                            </div>
-
-
-                            <strong>
-                                ${money(itemTotal)}
-                            </strong>
-
-
-                            <button
-                                onclick="removeItem(${index})"
-                            >
-                                Remove
-                            </button>
-
-                        </div>
-
-                    `;
-
-                }
-            )
-            .join("");
-
-
-    // ==========================================
-    // CART TOTAL
-    // ==========================================
-
-    const total =
-        cart.reduce(
-            (sum, item) =>
-                sum +
-                Number(item.price) *
-                item.quantity,
-
-            0
-        );
-
-
-    const summary =
-        document.getElementById(
-            "cart-summary"
-        );
-
+    const summary = document.getElementById("cart-summary");
 
     if (summary) {
-
         summary.innerHTML = `
-
             <div class="cart-total">
+                <h2>Total: ${money(total)}</h2>
 
-                <h2>
-                    Total: ${money(total)}
-                </h2>
-
+                ${
+                    hasFlowers
+                        ? `<p>Flower prices will be discussed and confirmed through WhatsApp.</p>`
+                        : ""
+                }
 
                 <p>
-                    Review your order before sending
-                    it to us on WhatsApp.
+                    Review your order before sending it to us on WhatsApp.
                 </p>
 
-
-                <button
-                    class="btn primary"
-                    onclick="orderViaWhatsApp()"
-                >
+                <button class="btn primary" onclick="orderViaWhatsApp()">
                     Order via WhatsApp 📱
                 </button>
-
             </div>
-
         `;
-
     }
-
 }
+
 
 
 // ==========================================
 // ORDER VIA WHATSAPP
 // ==========================================
 
+
 function orderViaWhatsApp() {
-
     if (!cart.length) {
-
-        alert(
-            "Your cart is empty."
-        );
-
+        alert("Your cart is empty.");
         return;
-
     }
 
+    let message = "Hello Flowers & Gifts Rwanda! 🌸\n\n";
+    message += "I would like to place an order:\n\n";
 
-    let message =
-        "Hello Flowers & Gifts Rwanda! 🌸\n\n";
+    cart.forEach((item, index) => {
+        const isFlower =
+            (item.category || "").toLowerCase().trim() === "flowers";
 
+        const itemTotal = isFlower
+            ? null
+            : Number(item.price) * item.quantity;
 
-    message +=
-        "I would like to place an order:\n\n";
+        message += `${index + 1}. ${item.name}\n`;
+        message += `   Quantity: ${item.quantity}\n`;
 
-
-    cart.forEach(
-        (item, index) => {
-
-            const itemTotal =
-                Number(item.price) *
-                item.quantity;
-
-
-            message +=
-                `${index + 1}. ${item.name}\n`;
-
-
-            message +=
-                `   Quantity: ${item.quantity}\n`;
-
-
-            message +=
-                `   Price: ${money(item.price)} each\n`;
-
-
-            // ==========================================
-            // CUSTOM GIFT CONTENTS
-            // ==========================================
-
-            if (
-                item.isCustomGift &&
-                item.components
-            ) {
-
-                message +=
-                    "   Gift contents:\n";
-
-
-                item.components.forEach(
-                    component => {
-
-                        message +=
-                            `   - ${component.name}: ${money(component.price)}\n`;
-
-
-                        if (component.image) {
-
-                            message +=
-                                `     Product image: ${component.image}\n`;
-
-                        }
-
-                    }
-                );
-
-            } else if (item.image) {
-
-                message +=
-                    `   Product image: ${item.image}\n`;
-
-            }
-
-
-            message +=
-                `   Subtotal: ${money(itemTotal)}\n\n`;
-
+        if (isFlower) {
+            message += "   Price: To be discussed\n";
+            message += "   Subtotal: To be discussed\n";
+        } else {
+            message += `   Price: ${money(item.price)} each\n`;
+            message += `   Subtotal: ${money(itemTotal)}\n`;
         }
+
+        // CUSTOM GIFT CONTENTS
+        if (item.isCustomGift && item.components) {
+            message += "   Gift contents:\n";
+
+            item.components.forEach(component => {
+                message += `   - ${component.name}: ${money(component.price)}\n`;
+
+                if (component.image) {
+                    message += `     Product image: ${component.image}\n`;
+                }
+            });
+        } else if (item.image) {
+            message += `   Product image: ${item.image}\n`;
+        }
+
+        message += "\n";
+    });
+
+    // Exclude flowers from the calculated total.
+    const total = cart.reduce((sum, item) => {
+        const isFlower =
+            (item.category || "").toLowerCase().trim() === "flowers";
+
+        if (isFlower) return sum;
+
+        return sum + Number(item.price) * item.quantity;
+    }, 0);
+
+    const hasFlowers = cart.some(item =>
+        (item.category || "").toLowerCase().trim() === "flowers"
     );
 
+    message += `Total for priced items: ${money(total)}\n`;
 
-    const total =
-        cart.reduce(
-            (sum, item) =>
-                sum +
-                Number(item.price) *
-                item.quantity,
+    if (hasFlowers) {
+        message += "Flower prices are not included in this total and will be agreed upon through WhatsApp.\n";
+    }
 
-            0
-        );
-
-
-    message +=
-        `Total: ${money(total)}\n\n`;
-
-
-    message +=
-        "Please let me know the delivery details and how I can complete the payment.\n\n";
-
-
-    message +=
-        "Thank you! 🌹";
-
+    message += "\nPlease let me know the delivery details and how I can complete the payment.\n\n";
+    message += "Thank you! 🌹";
 
     const whatsappURL =
         `https://wa.me/${WHATSAPP_NUMBER}?text=` +
         encodeURIComponent(message);
 
-
-    window.open(
-        whatsappURL,
-        "_blank"
-    );
-
+    window.open(whatsappURL, "_blank");
 }
-
 
 // ==========================================
 // CHANGE CART QUANTITY
