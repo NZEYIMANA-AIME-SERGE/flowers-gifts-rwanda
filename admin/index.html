@@ -736,9 +736,7 @@
                     formData.append("description", description);
                     formData.append("available", String(available));
 
-                    if (price !== "") {
-                        formData.append("price", price);
-                    }
+                    formData.append("price", price);
 
                     if (imageFile) {
                         formData.append("image", imageFile);
@@ -761,9 +759,7 @@
                         available
                     };
 
-                    if (price !== "") {
-                        productData.price = Number(price);
-                    }
+                  productData.price = price === "" ? null : Number(price);
 
                     response = await fetch(
                         `${API_URL}/api/admin/products/${editingProductId}`,

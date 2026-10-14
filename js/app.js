@@ -24,7 +24,7 @@ const API_URL = "https://flowers-gifts-rwanda.onrender.com";
 // WHATSAPP ORDER NUMBER
 // ==========================================
 
-const WHATSAPP_NUMBER = "250791912189";
+const WHATSAPP_NUMBER = "250780274472";
 
 
 // ==========================================
@@ -326,8 +326,8 @@ function card(product) {
 
 
                 <strong>
-                    ${money(product.price)}
-                </strong>
+    ${getStorePriceHTML(product)}
+</strong>
 
 
                 <button
@@ -614,16 +614,50 @@ let flowerGalleryIndex = 0;
 let giftGalleryIndex = 0;
 
 
+
 /* ==========================================
    FORMAT PRICE
 ========================================== */
 
 function formatGalleryPrice(price) {
+    if (
+        price === null ||
+        price === undefined ||
+        String(price).trim() === ""
+    ) {
+        return "";
+    }
 
-    return Number(price || 0).toLocaleString(
-        "en-RW"
-    ) + " RWF";
+    const amount = Number(
+        String(price).replace(/,/g, "").replace(/\s*RWF$/i, "").trim()
+    );
 
+    if (!Number.isFinite(amount)) {
+        return String(price).trim();
+    }
+
+    return amount.toLocaleString("en-RW") + " RWF";
+}
+
+
+/* ==========================================
+   STOREFRONT PRICE DISPLAY
+========================================== */
+
+function isFlowerProduct(product) {
+    return String(product.category || "")
+        .trim()
+        .toLowerCase() === "flowers";
+}
+
+function getStorePriceHTML(product) {
+    // Never display prices for flowers on the storefront
+    if (isFlowerProduct(product)) {
+        return "";
+    }
+
+    // Keep other gifts' prices when they are entered
+    return formatGalleryPrice(product.price);
 }
 
 
@@ -695,12 +729,10 @@ function showFeaturedFlower(product) {
         }
 
 
-        if (price) {
-            price.textContent =
-                formatGalleryPrice(
-                    product.price
-                );
-        }
+       if (price) {
+    price.textContent = "";
+    price.style.display = "none";
+}
 
 
         if (category) {
@@ -813,11 +845,12 @@ function showFeaturedGift(product) {
 
 
         if (price) {
-            price.textContent =
-                formatGalleryPrice(
-                    product.price
-                );
-        }
+    price.textContent =
+        getStorePriceHTML(product);
+
+    price.style.display =
+        price.textContent ? "" : "none";
+}
 
 
         if (category) {
@@ -1457,10 +1490,9 @@ function renderProduct() {
 
                 <h2>
 
-                    ${money(product.price)}
+    ${getStorePriceHTML(product)}
 
-                </h2>
-
+</h2>
 
                 <p>
 
@@ -2253,13 +2285,10 @@ function updateBuilder() {
                     product => `
 
                         <option
-                            value="${product.id}"
-                        >
-                            ${product.name}
-                            —
-                            ${money(product.price)}
-                        </option>
-
+    value="${product.id}"
+>
+    ${product.name}
+</option>
                     `
                 )
                 .join("")
@@ -2284,12 +2313,12 @@ function updateBuilder() {
                     product => `
 
                         <option
-                            value="${product.id}"
-                        >
-                            ${product.name}
-                            —
-                            ${money(product.price)}
-                        </option>
+    value="${product.id}"
+>
+    ${product.name}${formatGalleryPrice(product.price)
+        ? " — " + formatGalleryPrice(product.price)
+        : ""}
+</option>
 
                     `
                 )
