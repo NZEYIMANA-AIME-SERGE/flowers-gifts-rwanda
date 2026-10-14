@@ -1464,3 +1464,42 @@ footer {
     object-fit: cover;
     border-radius: 50%;
 }
+
+
+/* Flower card: Add to Cart + WhatsApp buttons */
+.product-actions {
+    display: flex;
+    align-items: stretch;
+    gap: 8px;
+    margin-top: 15px;
+}
+
+.product-actions .add-btn {
+    flex: 1;
+    width: auto;
+    min-width: 0;
+    margin-top: 0;
+    padding: 12px 8px;
+}
+
+.flower-whatsapp-btn {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border-radius: 10px;
+    background: #25D366;
+    color: #fff;
+    font-weight: 700;
+    font-size: 14px;
+    text-decoration: none;
+    text-align: center;
+    box-sizing: border-box;
+    transition: background 0.2s;
+}
+
+.flower-whatsapp-btn:hover {
+    background: #1DA851;
+}

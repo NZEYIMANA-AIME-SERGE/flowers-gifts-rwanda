@@ -285,60 +285,85 @@ function addToCart(id) {
 // PRODUCT CARD
 // ==========================================
 
+
 function card(product) {
+    const productVisual = product.image
+        ? `
+            <img
+                src="${product.image}"
+                alt="${product.name}"
+            >
+          `
+        : `
+            <div class="product-placeholder">
+                ${product.emoji || "🎁"}
+            </div>
+          `;
 
-    const productVisual =
-        product.image
+    const isFlower =
+        (product.category || "").toLowerCase().trim() === "flowers";
 
-            ? `
-                <img
-                    src="${product.image}"
-                    alt="${product.name}"
-                >
-              `
+    const whatsappMessage =
+        `Hello Flowers & Gifts Rwanda! 🌸\n\n` +
+        `I would like to order this flower:\n` +
+        `Name: ${product.name}\n` +
+        `Quantity: 1\n` +
+        `Price: To be discussed\n` +
+        (product.image
+            ? `Product image: ${product.image}\n`
+            : "") +
+        `\nPlease let me know the price and delivery details. Thank you!`;
 
-            : `
-                <div class="product-placeholder">
-                    ${product.emoji || "🎁"}
-                </div>
-              `;
-
+    const whatsappURL =
+        `https://wa.me/${WHATSAPP_NUMBER}?text=` +
+        encodeURIComponent(whatsappMessage);
 
     return `
-
         <article class="product-card">
-
             <div class="product-image">
-
                 ${productVisual}
-
             </div>
 
-
             <div class="product-info">
+                <h3>${product.name}</h3>
 
-                <h3>
-                    ${product.name}
-                </h3>
-
-
-                <p>
-                    ${product.description}
-                </p>
-
+                <p>${product.description}</p>
 
                 <strong>
-    ${getStorePriceHTML(product)}
-</strong>
+                    ${getStorePriceHTML(product)}
+                </strong>
 
+                ${
+                    isFlower
+                        ? `
+                            <div class="product-actions">
+                                <button
+                                    class="add-btn"
+                                    onclick="addToCart(${product.id})"
+                                >
+                                    Add to Cart
+                                </button>
 
-                <button
-                    class="add-btn"
-                    onclick="addToCart(${product.id})"
-                >
-                    Add to Cart
-                </button>
-
+                                <a
+                                    class="flower-whatsapp-btn"
+                                    href="${whatsappURL}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    aria-label="Order ${product.name} via WhatsApp"
+                                >
+                                    WhatsApp
+                                </a>
+                            </div>
+                          `
+                        : `
+                            <button
+                                class="add-btn"
+                                onclick="addToCart(${product.id})"
+                            >
+                                Add to Cart
+                            </button>
+                          `
+                }
 
                 <a
                     class="details"
@@ -346,14 +371,11 @@ function card(product) {
                 >
                     View details →
                 </a>
-
             </div>
-
         </article>
-
     `;
-
 }
+
 
 
 // ==========================================
@@ -1440,7 +1462,13 @@ function renderShopCategories() {
         { value: "shoes-and-bags", name: "Shoes & Bags", emoji: "👟" },
         { value: "cakes", name: "Cakes", emoji: "🎂" },
         { value: "teddy-bears", name: "Teddy Bears", emoji: "🧸" },
-        { value: "jewelry", name: "Jewelry", emoji: "💎" }
+        { value: "jewelry", name: "Jewelry", emoji: "💎" },
+        
+  {
+    value: "champagne-and-wines",
+    name: "Champagne & Wines",
+    emoji: "🍾"
+}
     ];
 
     const params = new URLSearchParams(window.location.search);
