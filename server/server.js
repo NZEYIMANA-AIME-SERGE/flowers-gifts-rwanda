@@ -766,9 +766,26 @@ app.put(
                 product.description = description;
             }
 
-            if (price !== undefined) {
-                product.price = String(price).trim();
-            }
+            
+if (price !== undefined) {
+    const cleanedPrice = String(price).trim();
+
+    if (cleanedPrice === "" || cleanedPrice.toLowerCase() === "null") {
+        product.price = null;
+    } else {
+        const parsedPrice = Number(cleanedPrice);
+
+        if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
+            return res.status(400).json({
+                success: false,
+                message: "Price must be a non-negative number, or left blank."
+            });
+        }
+
+        product.price = parsedPrice;
+    }
+}
+
 
             if (category !== undefined) {
                 if (!String(category).trim()) {
