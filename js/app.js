@@ -281,10 +281,10 @@ function addToCart(id) {
 }
 
 
-// ==========================================
-// PRODUCT CARD
-// ==========================================
 
+ // ==========================================
+ // PRODUCT CARD
+ // ==========================================
 
 function card(product) {
     const productVisual = product.image
@@ -351,7 +351,8 @@ function card(product) {
                                     rel="noopener noreferrer"
                                     aria-label="Order ${product.name} via WhatsApp"
                                 >
-                                    WhatsApp
+                                    <span class="whatsapp-icon">💬</span>
+                                    <span>Order Now</span>
                                 </a>
                             </div>
                           `
@@ -375,7 +376,6 @@ function card(product) {
         </article>
     `;
 }
-
 
 
 // ==========================================

@@ -1503,3 +1503,37 @@ footer {
 .flower-whatsapp-btn:hover {
     background: #1DA851;
 }
+
+
+.product-actions {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.product-actions > button,
+.product-actions > a {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  box-sizing: border-box;
+  border-radius: 30px;
+  padding: 12px 8px;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.flower-whatsapp-btn {
+  background: #25D366;
+  color: #fff;
+  text-decoration: none;
+  border: none;
+}
+
+.flower-whatsapp-btn:hover {
+  background: #1fba59;
+}
