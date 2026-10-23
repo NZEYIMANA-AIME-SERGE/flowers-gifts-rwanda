@@ -122,6 +122,36 @@
             overflow-x: auto;
         }
 
+        .product-filter-bar {
+            display: grid;
+            grid-template-columns: minmax(220px, 1fr) minmax(190px, 280px);
+            gap: 14px;
+            margin: 18px 0;
+        }
+
+        .product-filter-bar label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+
+        .product-filter-bar input,
+        .product-filter-bar select {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 11px;
+            border: 1px solid #d8d8d8;
+            border-radius: 7px;
+            background: #fff;
+            font: inherit;
+        }
+
+        @media (max-width: 600px) {
+            .product-filter-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+
         .product-table {
             width: 100%;
             border-collapse: collapse;
@@ -307,6 +337,7 @@
         <option value="teddy-bears">Teddy Bears</option>
         <option value="jewelry">Jewelry</option>
         <option value="champagne-and-wines">Champagne &amp; Wines</option>
+        <option value="gift-bundles">Gift Bundles</option>
     </select>
 </div>
 
@@ -426,11 +457,29 @@
                 </div>
 
                 <div class="product-manager">
+                    <div class="product-filter-bar">
+                        <div>
+                            <label for="product-search">Search product names</label>
+                            <input
+                                type="search"
+                                id="product-search"
+                                placeholder="Type a product name..."
+                                oninput="renderProducts()"
+                            >
+                        </div>
+                        <div>
+                            <label for="product-category-filter">Filter by category</label>
+                            <select id="product-category-filter" onchange="renderProducts()">
+                                <option value="">All categories</option>
+                            </select>
+                        </div>
+                    </div>
                     <div id="products-container" class="product-table-wrapper">
                         <div class="loading">Loading products...</div>
                     </div>
                 </div>
             </div>
+
         </div>
     </main>
 
@@ -516,6 +565,12 @@
 
         let allProducts = [];
         let editingProductId = null;
+        let editingLegacyProduct = false;
+        const originalBundles = [
+            { name: "Birthday Surprise", description: "Beautifully combined gifts for a special occasion.", price: 55000, category: "gift-bundles", emoji: "🌹 🍫 🎂", available: true, _legacy: true },
+            { name: "Romantic Surprise", description: "Beautifully combined gifts for a special occasion.", price: 75000, category: "gift-bundles", emoji: "🌹 💎 🍫", available: true, _legacy: true },
+            { name: "Luxury Gift Box", description: "Beautifully combined gifts for a special occasion.", price: 100000, category: "gift-bundles", emoji: "🌸 🎁 🧸", available: true, _legacy: true }
+        ];
 
         function formatMoney(amount) {
             if (amount === null || amount === undefined || amount === "") {
@@ -563,6 +618,23 @@
             }, 5000);
         }
 
+        async function readDeleteResponse(response) {
+            const responseText = await response.text();
+            let data;
+            try {
+                data = responseText ? JSON.parse(responseText) : {};
+            } catch {
+                if (response.status === 404) {
+                    throw new Error("The running server does not have the latest delete route yet. Deploy the latest backend, then try again.");
+                }
+                throw new Error(`The server returned HTTP ${response.status} with an unreadable response.`);
+            }
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || data.error || `The server returned HTTP ${response.status}.`);
+            }
+            return data;
+        }
+
         async function loadProducts() {
             const container = document.getElementById("products-container");
             container.innerHTML = '<div class="loading">Loading products...</div>';
@@ -575,7 +647,19 @@
                     throw new Error(data.message || "Could not load products.");
                 }
 
-                allProducts = data.products || [];
+                const savedProducts = data.products || [];
+                const deletedOriginalBundles = new Set(data.deletedOriginalBundles || []);
+                const savedBundleNames = new Set(savedProducts
+                    .filter(product => product.category === "gift-bundles")
+                    .map(product => String(product.name).toLowerCase()));
+                allProducts = [
+                    ...savedProducts,
+                    ...originalBundles.filter(bundle =>
+                        !savedBundleNames.has(bundle.name.toLowerCase()) &&
+                        !deletedOriginalBundles.has(bundle.name)
+                    )
+                ];
+                updateProductCategoryFilter();
                 renderProducts();
             } catch (error) {
                 console.error("Products error:", error);
@@ -598,6 +682,32 @@
         }
 
       
+function updateProductCategoryFilter() {
+    const select = document.getElementById("product-category-filter");
+    if (!select) return;
+
+    const currentValue = select.value;
+    const categories = [...new Set([
+        allProducts
+            .map(product => String(product.category || "").trim())
+            .filter(Boolean),
+        "gift-bundles"
+    ].flat())].sort((a, b) => a.localeCompare(b));
+
+    select.innerHTML = `
+        <option value="">All categories</option>
+        ${categories.map(category => `
+            <option value="${escapeHTML(category)}">${escapeHTML(
+                category.replace(/[-_]+/g, " ").replace(/\b\w/g, character => character.toUpperCase())
+            )}</option>
+        `).join("")}
+    `;
+
+    if (categories.includes(currentValue)) {
+        select.value = currentValue;
+    }
+}
+
 function renderProducts() {
     const container = document.getElementById("products-container");
 
@@ -605,6 +715,28 @@ function renderProducts() {
         container.innerHTML = `
             <div class="loading">
                 No products found. Click “Add Product” to add your first product.
+            </div>
+        `;
+        return;
+    }
+
+    const search = (document.getElementById("product-search")?.value || "")
+        .trim()
+        .toLocaleLowerCase();
+    const category = document.getElementById("product-category-filter")?.value || "";
+    const visibleProducts = allProducts.filter(product => {
+        const nameMatches = String(product.name || "")
+            .toLocaleLowerCase()
+            .includes(search);
+        const categoryMatches =
+            !category || String(product.category || "").trim() === category;
+        return nameMatches && categoryMatches;
+    });
+
+    if (visibleProducts.length === 0) {
+        container.innerHTML = `
+            <div class="loading">
+                No products match your search or category filter.
             </div>
         `;
         return;
@@ -623,7 +755,7 @@ function renderProducts() {
                 </tr>
             </thead>
             <tbody>
-                ${allProducts.map(product => {
+                ${visibleProducts.map(product => {
                     // Support legacy images, regular multiple images,
                     // and images stored inside product variations.
                     const variationImage = Array.isArray(product.variations)
@@ -650,7 +782,7 @@ function renderProducts() {
                                 onerror="this.style.display='none';this.nextElementSibling.style.display='inline';"
                            >
                            <span style="display:none;">Image unavailable</span>`
-                        : "No image";
+                        : (product.emoji ? escapeHTML(product.emoji) : "No image");
 
                     const available = product.available !== false;
 
@@ -669,11 +801,13 @@ function renderProducts() {
                                 <div class="product-actions">
                                     <button
                                         class="small-button edit-button"
-                                        onclick="editProduct('${escapeHTML(product._id)}')"
+                                        onclick="editProduct(${allProducts.indexOf(product)})"
                                     >Edit</button>
                                     <button
                                         class="small-button delete-button"
-                                        onclick="deleteProduct('${escapeHTML(product._id)}')"
+                                        onclick="${product._legacy
+                                            ? `deleteLegacyBundle(${allProducts.indexOf(product)})`
+                                            : `deleteProduct('${escapeHTML(product._id)}')` }"
                                     >Delete</button>
                                 </div>
                             </td>
@@ -687,6 +821,7 @@ function renderProducts() {
 
         function openAddProductForm() {
             editingProductId = null;
+            editingLegacyProduct = false;
 
             document.getElementById("product-form-title").textContent = "Add New Product";
             document.getElementById("save-product-button").textContent = "Save Product";
@@ -711,6 +846,7 @@ mainProductImagesGroup.hidden = false;
 
         function closeProductForm() {
             editingProductId = null;
+            editingLegacyProduct = false;
             document.getElementById("product-manager-form").reset();
             document.getElementById("product-available").checked = true;
             document.getElementById("product-form").classList.remove("active");
@@ -726,15 +862,16 @@ mainProductImagesGroup.hidden = false;
         }
 
        
-function editProduct(productId) {
-    const product = allProducts.find(item => item._id === productId);
+function editProduct(productIndex) {
+    const product = allProducts[productIndex];
 
     if (!product) {
         alert("Product not found.");
         return;
     }
 
-    editingProductId = productId;
+    editingProductId = product._id || null;
+    editingLegacyProduct = Boolean(product._legacy);
 
     document.getElementById("product-form-title").textContent = "Edit Product";
     document.getElementById("product-name").value = product.name || "";
@@ -942,7 +1079,7 @@ async function saveProduct(event) {
         }
 
         showProductMessage(
-            isEditing
+            isEditing || editingLegacyProduct
                 ? "Product updated successfully."
                 : "Product added successfully.",
             "success"
@@ -960,7 +1097,7 @@ async function saveProduct(event) {
         );
     } finally {
         saveButton.disabled = false;
-        saveButton.textContent = editingProductId
+        saveButton.textContent = editingProductId || editingLegacyProduct
             ? "Update Product"
             : "Save Product";
     }
@@ -984,16 +1121,31 @@ async function saveProduct(event) {
                     { method: "DELETE" }
                 );
 
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.message || "Failed to delete product.");
-                }
+                await readDeleteResponse(response);
 
                 showProductMessage("Product deleted successfully.", "success");
                 await loadProducts();
             } catch (error) {
                 console.error("Delete product error:", error);
+                showProductMessage(error.message, "error");
+            }
+        }
+
+        async function deleteLegacyBundle(productIndex) {
+            const bundle = allProducts[productIndex];
+            if (!bundle?._legacy) return;
+            if (!confirm(`Are you sure you want to delete "${bundle.name}"?`)) return;
+
+            try {
+                const response = await fetch(
+                    `${API_URL}/api/admin/products/legacy-bundle/${encodeURIComponent(bundle.name)}`,
+                    { method: "DELETE" }
+                );
+                await readDeleteResponse(response);
+                showProductMessage("Gift bundle deleted successfully.", "success");
+                await loadProducts();
+            } catch (error) {
+                console.error("Delete gift bundle error:", error);
                 showProductMessage(error.message, "error");
             }
         }

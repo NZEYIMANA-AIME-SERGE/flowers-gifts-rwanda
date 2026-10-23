@@ -129,73 +129,56 @@
 
 
 
-          <div class="builder-form">
+            <div class="gift-builder-layout">
+                <section class="gift-builder-column" aria-label="Choose flowers">
+                    <div class="gift-builder-step">
+                        <span class="builder-step-number">1</span>
+                        <div>
+                            <h2>Choose your flowers</h2>
+                            <p>Select the flowers to start your gift.</p>
+                        </div>
+                    </div>
+                    <div id="builder-flower-options" class="builder-choice-grid"></div>
+                </section>
 
-    <!-- CHOOSE FLOWERS -->
+                <section class="gift-builder-column" aria-label="Choose gifts">
+                    <div class="gift-builder-step gift-builder-step-gift">
+                        <span class="builder-step-number">2</span>
+                        <div>
+                            <h2>Add gifts</h2>
+                            <p>Choose as many gifts as you like. Select an added gift again to remove it.</p>
+                        </div>
+                    </div>
+                    <div id="builder-gift-options" class="builder-choice-grid"></div>
+                </section>
 
-    <label>
+                <aside class="gift-builder-preview" aria-live="polite" aria-label="Your selected gift items">
+                    <div class="gift-builder-step">
+                        <span class="builder-step-number">3</span>
+                        <div>
+                            <h2>Your Gift</h2>
+                            <p class="builder-preview-hint">Remove anything you don’t want.</p>
+                        </div>
+                    </div>
+                    <div id="builder-preview-stage" class="builder-preview-stage">
+                        <div id="builder-preview-empty" class="builder-preview-empty">
+                            <span>🎁</span>
+                            <p>Your selected products will appear here.</p>
+                        </div>
+                        <div id="builder-preview-items" class="builder-preview-items"></div>
+                    </div>
+                    <div class="builder-total-row">
+                        <span>Total</span>
+                        <strong id="builder-total">0 RWF</strong>
+                    </div>
+                    <button class="btn primary builder-add-button" type="button" onclick="addCustomGift()">
+                        Add Gift to Cart
+                    </button>
+                </aside>
+            </div>
 
-        Choose flowers
-
-        <select id="flower">
-
-            <option value="">
-
-                Choose flowers
-
-            </option>
-
-        </select>
-
-    </label>
-
-
-    <!-- CHOOSE GIFT -->
-
-    <label>
-
-        Choose a gift
-
-        <select id="sweet">
-
-            <option value="0">
-
-                No additional gift
-
-            </option>
-
-        </select>
-
-    </label>
-
-
-    <!-- TOTAL -->
-
-    <h2>
-
-        Total:
-
-        <span id="builder-total">
-
-            0 RWF
-
-        </span>
-
-    </h2>
-
-
-    <!-- ADD TO CART -->
-
-    <button
-        class="btn primary"
-        onclick="addCustomGift()"
-    >
-
-        Add Gift to Cart
-
-    </button>
-
-</div>
+            <select id="flower" hidden aria-hidden="true" tabindex="-1"></select>
+            <select id="sweet" multiple hidden aria-hidden="true" tabindex="-1"></select>
 
 
     </main>

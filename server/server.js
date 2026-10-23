@@ -12,7 +12,23 @@ require("dotenv").config({
 });
 
 const Product = require("./models/product");
+const StoreSetting = require("./models/store-setting");
 const Order = require("./models/order");
+
+const ORIGINAL_BUNDLE_NAMES = [
+    "Birthday Surprise",
+    "Romantic Surprise",
+    "Luxury Gift Box"
+];
+
+async function rememberDeletedOriginalBundle(name) {
+    if (!ORIGINAL_BUNDLE_NAMES.includes(name)) return;
+    await StoreSetting.findOneAndUpdate(
+        { key: "deleted-original-bundles" },
+        { $addToSet: { values: name } },
+        { upsert: true, new: true }
+    );
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -264,11 +280,15 @@ app.get("/api/health", (req, res) => {
 
 app.get("/api/products", async (req, res) => {
     try {
-        const products = await Product.find();
+        const [products, bundleSetting] = await Promise.all([
+            Product.find(),
+            StoreSetting.findOne({ key: "deleted-original-bundles" })
+        ]);
 
         res.json({
             success: true,
-            products
+            products,
+            deletedOriginalBundles: bundleSetting?.values || []
         });
     } catch (error) {
         console.error("Failed to fetch products:", error);
@@ -832,13 +852,15 @@ app.put("/api/admin/orders/:id/status", async (req, res) => {
 
 app.get("/api/admin/products", async (req, res) => {
     try {
-        const products = await Product
-            .find()
-            .sort({ createdAt: -1 });
+        const [products, bundleSetting] = await Promise.all([
+            Product.find().sort({ createdAt: -1 }),
+            StoreSetting.findOne({ key: "deleted-original-bundles" })
+        ]);
 
         res.json({
             success: true,
-            products
+            products,
+            deletedOriginalBundles: bundleSetting?.values || []
         });
     } catch (error) {
         console.error("Failed to fetch admin products:", error);
@@ -1197,15 +1219,20 @@ app.delete("/api/admin/products/:id", async (req, res) => {
             });
         }
 
-        const deletedProduct =
-            await Product.findByIdAndDelete(id);
+        const product = await Product.findById(id);
 
-        if (!deletedProduct) {
+        if (!product) {
             return res.status(404).json({
                 success: false,
                 message: "Product not found"
             });
         }
+
+        if (product.category === "gift-bundles") {
+            await rememberDeletedOriginalBundle(product.name);
+        }
+
+        const deletedProduct = await Product.findByIdAndDelete(id);
 
         res.json({
             success: true,
@@ -1220,6 +1247,21 @@ app.delete("/api/admin/products/:id", async (req, res) => {
             message: "Failed to delete product",
             error: error.message
         });
+    }
+});
+
+app.delete("/api/admin/products/legacy-bundle/:name", async (req, res) => {
+    try {
+        const name = decodeURIComponent(req.params.name);
+        if (!ORIGINAL_BUNDLE_NAMES.includes(name)) {
+            return res.status(400).json({ success: false, message: "Unknown original bundle." });
+        }
+
+        await rememberDeletedOriginalBundle(name);
+        res.json({ success: true, message: "Gift bundle deleted successfully." });
+    } catch (error) {
+        console.error("Failed to delete original gift bundle:", error);
+        res.status(500).json({ success: false, message: "Failed to delete gift bundle." });
     }
 });
 

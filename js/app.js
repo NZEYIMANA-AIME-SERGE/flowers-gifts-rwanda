@@ -416,16 +416,32 @@ function card(product) {
 
     const isFlower =
         (product.category || "").toLowerCase().trim() === "flowers";
+    const flowerOccasions = {
+        birthday: "Birthday",
+        romance: "Romance",
+        graduation: "Graduation",
+        wedding: "Wedding",
+        "baby-boy": "Baby Boy",
+        "baby-girl": "Baby Girl",
+        sympathy: "Sympathy",
+        "thank-you": "Thank You",
+        "just-because": "Just Because"
+    };
+    const occasionName = flowerOccasions[
+        String(product.occasion || "").toLowerCase().trim()
+    ];
 
     const variationLabel = {
         color: "Choose a color",
         size: "Choose a size",
         arrangement: "Choose an arrangement"
     }[product.variationType] || "Choose an option";
+    const priceHTML = getStorePriceHTML(product);
 
     return `
         <article class="product-card">
             <div class="product-image">
+                ${isFlower && occasionName ? `<span class="product-ribbon">${occasionName}</span>` : ""}
                 ${productVisual}
             </div>
 
@@ -434,9 +450,7 @@ function card(product) {
 
                 <p>${product.description}</p>
 
-                <strong>
-                    ${getStorePriceHTML(product)}
-                </strong>
+                ${priceHTML ? `<strong class="product-price">${priceHTML}</strong>` : ""}
 
                 ${hasVariations ? `
                     <label class="card-variation-label" for="card-variation-${product.id}">${variationLabel}</label>
@@ -655,7 +669,7 @@ function filterFlowersByOccasion(
     // FILTER BY OCCASION
     // ==========================================
 
-    if (occasion !== "all") {
+    if (occasion !== "all" && occasion !== "") {
 
         const selectedOccasion =
             (occasion || "")
@@ -745,7 +759,6 @@ function renderFlowerOccasionImages() {
                 icon.textContent = {
                     birthday: "🎂",
                     romance: "❤️",
-                    anniversary: "💍",
                     graduation: "🎓",
                     wedding: "💐",
                     sympathy: "🕊️",
@@ -884,19 +897,8 @@ function shuffleProducts(items) {
    STOREFRONT PRICE DISPLAY
 ========================================== */
 
-function isFlowerProduct(product) {
-    return String(product.category || "")
-        .trim()
-        .toLowerCase() === "flowers";
-}
-
 function getStorePriceHTML(product) {
-    // Never display prices for flowers on the storefront
-    if (isFlowerProduct(product)) {
-        return "";
-    }
-
-    // Keep other gifts' prices when they are entered
+    // Display a price only when one has been entered for the product.
     return formatGalleryPrice(product.price);
 }
 
@@ -969,10 +971,10 @@ function showFeaturedFlower(product) {
         }
 
 
-       if (price) {
-    price.textContent = "";
-    price.style.display = "none";
-}
+        if (price) {
+            price.textContent = getStorePriceHTML(product);
+            price.style.display = price.textContent ? "" : "none";
+        }
 
 
         if (category) {
@@ -1337,6 +1339,7 @@ function renderShop() {
 
     const urlCategory =
         params.get("category") || "";
+    const urlOccasion = params.get("occasion") || "";
 
 
     // ==========================================
@@ -1422,6 +1425,12 @@ return (
                 }
             );
 
+    }
+
+    if (category.toLowerCase().trim() === "flowers" && urlOccasion) {
+        filteredProducts = filteredProducts.filter(product =>
+            String(product.occasion || "").toLowerCase().trim() === urlOccasion
+        );
     }
 
 
@@ -1535,6 +1544,11 @@ const categoryNames = {
         categoryElement.value =
             category;
 
+        categoryElement.hidden = category.toLowerCase().trim() === "flowers";
+
+    } else if (categoryElement) {
+        categoryElement.hidden = false;
+
     }
 
 
@@ -1647,6 +1661,32 @@ function renderShopCategories() {
 
     const params = new URLSearchParams(window.location.search);
     const selectedCategory = params.get("category") || "";
+    const selectedOccasion = params.get("occasion") || "";
+
+    if (selectedCategory.toLowerCase().trim() === "flowers") {
+        const flowerOccasions = [
+            { value: "", name: "All Flowers", emoji: "🌸" },
+            { value: "birthday", name: "Birthday", emoji: "🎂" },
+            { value: "romance", name: "Romance", emoji: "❤️" },
+            { value: "graduation", name: "Graduation", emoji: "🎓" },
+            { value: "wedding", name: "Wedding", emoji: "💐" },
+            { value: "baby-boy", name: "Baby Boy", emoji: "💙" },
+            { value: "baby-girl", name: "Baby Girl", emoji: "💗" },
+            { value: "sympathy", name: "Sympathy", emoji: "🕊️" },
+            { value: "thank-you", name: "Thank You", emoji: "💝" },
+            { value: "just-because", name: "Just Because", emoji: "🌷" }
+        ];
+        container.classList.add("shop-flower-ribbons");
+        container.innerHTML = flowerOccasions.map(occasion => `
+            <a class="shop-flower-ribbon${selectedOccasion === occasion.value ? " active" : ""}"
+                href="shop.html?category=flowers${occasion.value ? `&occasion=${encodeURIComponent(occasion.value)}` : ""}">
+                <span aria-hidden="true">${occasion.emoji}</span>${occasion.name}
+            </a>
+        `).join("");
+        return;
+    }
+
+    container.classList.remove("shop-flower-ribbons");
 
     container.innerHTML = categories.map(category => {
         // Support older products still categorized as "fashion".
@@ -1766,6 +1806,7 @@ function renderProduct() {
         size: "Choose a size",
         arrangement: "Choose an arrangement"
     }[product.variationType] || "Choose an option";
+    const priceHTML = getStorePriceHTML(product);
 
 
     element.innerHTML = `
@@ -1819,11 +1860,7 @@ function renderProduct() {
                 </div>
 
 
-                <h2>
-
-    ${getStorePriceHTML(product)}
-
-</h2>
+                ${priceHTML ? `<h2 class="product-price">${priceHTML}</h2>` : ""}
 
                 <p>
 
@@ -1931,103 +1968,72 @@ function selectProductPhoto(button) {
 // BUNDLES
 // ==========================================
 
-function renderBundles() {
+const defaultBundles = [
+    { name: "Birthday Surprise", emoji: ["🌹", "🍫", "🎂"], price: 55000, description: "Beautifully combined gifts for a special occasion." },
+    { name: "Romantic Surprise", emoji: ["🌹", "💎", "🍫"], price: 75000, description: "Beautifully combined gifts for a special occasion." },
+    { name: "Luxury Gift Box", emoji: ["🌸", "🎁", "🧸"], price: 100000, description: "Beautifully combined gifts for a special occasion." }
+];
 
-    const bundles = [
+function escapeBundleText(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+}
 
-        [
-            "Birthday Surprise",
-            ["🌹", "🍫", "🎂"],
-            55000
-        ],
+async function renderBundles() {
+    const element = document.getElementById("bundles");
+    if (!element) return;
 
-        [
-            "Romantic Surprise",
-            ["🌹", "💎", "🍫"],
-            75000
-        ],
-
-        [
-            "Luxury Gift Box",
-            ["🌸", "🎁", "🧸"],
-            100000
-        ]
-
-    ];
-
-
-    const element =
-        document.getElementById(
-            "bundles"
-        );
-
-
-    if (!element) {
-
-        return;
-
+    let managedBundles = [];
+    let managedNames = [];
+    let deletedOriginalBundles = [];
+    try {
+        const response = await fetch(`${API_URL}/api/products`);
+        const data = await response.json();
+        if (response.ok && data.success) {
+            const products = data.products || [];
+            deletedOriginalBundles = data.deletedOriginalBundles || [];
+            managedNames = products
+                .filter(product => product.category === "gift-bundles")
+                .map(product => product.name);
+            managedBundles = products
+                .filter(product => product.category === "gift-bundles" && product.available !== false)
+                .map(product => ({
+                    ...product,
+                    image: product.image || product.images?.[0] || "",
+                    mongoId: product._id
+                }));
+        }
+    } catch (error) {
+        console.warn("Could not load gift bundles from the server:", error);
     }
 
+    const managedNameSet = new Set(managedNames.map(name => String(name).toLowerCase()));
+    const bundles = [
+        ...managedBundles.map(bundle => ({ ...bundle, mongoId: bundle._id })),
+        ...defaultBundles.filter(bundle =>
+            !managedNameSet.has(bundle.name.toLowerCase()) &&
+            !deletedOriginalBundles.includes(bundle.name)
+        )
+    ];
 
-    element.innerHTML =
-        bundles
-            .map(
-                (bundle, index) => `
+    element.innerHTML = bundles.map((bundle, index) => {
+        const visual = bundle.image
+            ? `<img src="${escapeBundleText(bundle.image)}" alt="${escapeBundleText(bundle.name)}" class="bundle-photo">`
+            : `<div class="bundle-art">${escapeBundleText((bundle.emoji || ["🎁"]).join(" "))}</div>`;
+        return `
+            <article class="bundle-card">
+                ${visual}
+                <div class="product-info">
+                    <h2>${escapeBundleText(bundle.name)}</h2>
+                    <p>${escapeBundleText(bundle.description || "Beautifully combined gifts for a special occasion.")}</p>
+                    ${bundle.price !== "" && bundle.price !== null && bundle.price !== undefined ? `<strong>${money(bundle.price)}</strong>` : ""}
+                    <button class="add-btn" onclick="addBundle(${index})">Add Bundle</button>
+                </div>
+            </article>`;
+    }).join("");
 
-                    <article class="bundle-card">
-
-                        <div class="bundle-art">
-
-                            ${bundle[1].join(" ")}
-
-                        </div>
-
-
-                        <div class="product-info">
-
-                            <h2>
-
-                                ${bundle[0]}
-
-                            </h2>
-
-
-                            <p>
-
-                                Beautifully combined gifts
-                                for a special occasion.
-
-                            </p>
-
-
-                            <strong>
-
-                                ${money(bundle[2])}
-
-                            </strong>
-
-
-                            <button
-                                class="add-btn"
-                                onclick="addBundle(${index})"
-                            >
-
-                                Add Bundle
-
-                            </button>
-
-                        </div>
-
-                    </article>
-
-                `
-            )
-            .join("");
-
-
-    window.bundleData =
-        bundles;
-
+    window.bundleData = bundles;
 }
 
 
@@ -2051,13 +2057,13 @@ function addBundle(index) {
     cart.push({
 
         id:
-            "bundle" + index,
+            "bundle" + (bundle.mongoId || bundle.name),
 
         name:
-            bundle[0],
+            bundle.name,
 
         price:
-            bundle[2],
+            bundle.price,
 
         emoji:
             "🎁",
@@ -2391,216 +2397,159 @@ function placeOrder(event) {
 // BUILD A GIFT
 // ==========================================
 
+function getBuilderPriceAmount(product) {
+    if (!product || String(product.price ?? "").trim() === "") return null;
+    const amount = Number(
+        String(product.price).replace(/,/g, "").replace(/\s*RWF$/i, "").trim()
+    );
+    return Number.isFinite(amount) ? amount : null;
+}
+
 function updateBuilder() {
+    const flowerElement = document.getElementById("flower");
+    const giftElement = document.getElementById("sweet");
+    if (!flowerElement || !giftElement) return;
 
-    const flowerElement =
-        document.getElementById(
-            "flower"
-        );
-
-
-    const giftElement =
-        document.getElementById(
-            "sweet"
-        );
-
-
-    const totalElement =
-        document.getElementById(
-            "builder-total"
-        );
-
-
-    // Stop if this is not the Build a Gift page.
-    if (
-        !flowerElement ||
-        !giftElement
-    ) {
-
-        return;
-
-    }
-
-
-    // ==========================================
-    // ONLY AVAILABLE PRODUCTS
-    // ==========================================
-
-    const availableProducts =
-        products.filter(
-            product =>
-                product.available !== false
-        );
-
-
-    // ==========================================
-    // FIND AVAILABLE FLOWERS
-    // ==========================================
-
-   const flowers = shuffleProducts(
-    availableProducts.filter(
-        product =>
-            (product.category || "")
-                .toLowerCase()
-                .trim() === "flowers"
-    )
-);
-
-    // ==========================================
-    // GIFT CATEGORIES
-    // ==========================================
-
+    const availableProducts = products.filter(product => product.available !== false);
+    const flowers = availableProducts.filter(product =>
+        (product.category || "").toLowerCase().trim() === "flowers"
+    );
     const giftCategories = [
-
-        "chocolates",
-
-        "perfumes",
-
-        "fashion",
-
-        "cakes",
-
-        "teddy-bears",
-
-        "baskets",
-
-        "jewelry",
-
-        "gift-sets",
-
-        "other"
-
+        "chocolates", "perfumes", "fashion", "cakes", "teddy-bears",
+        "baskets", "jewelry", "gift-sets", "other", "shoes-and-bags",
+        "champagne-and-wines", "gift-bundles"
     ];
+    const gifts = availableProducts.filter(product =>
+        giftCategories.includes((product.category || "").toLowerCase().trim()) &&
+        (product.category || "").toLowerCase().trim() !== "gift-bundles"
+    );
 
+    const previousFlower = flowerElement.value;
+    const previousGifts = Array.from(giftElement.selectedOptions, option => option.value);
+    const safeText = value => String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[character]);
+    const photoFor = product => product.image || product.images?.[0] || "";
+    const imageMarkup = (product, className) => {
+        const image = photoFor(product);
+        return image
+            ? `<img class="${className}" src="${safeText(image)}" alt="${safeText(product.name)}" loading="lazy">`
+            : `<span class="${className} builder-choice-emoji">${safeText(product.emoji || "🎁")}</span>`;
+    };
 
-    // ==========================================
-    // FIND INDIVIDUAL GIFTS
-    // ==========================================
+    flowerElement.innerHTML = `<option value="">Choose flowers</option>${flowers.map(product =>
+        `<option value="${safeText(product.id)}">${safeText(product.name)}</option>`
+    ).join("")}`;
+    giftElement.innerHTML = gifts.map(product =>
+        `<option value="${safeText(product.id)}">${safeText(product.name)}</option>`
+    ).join("");
 
-    const gifts =
-        availableProducts.filter(
-            product =>
-                giftCategories.includes(
-                    (product.category || "")
-                        .toLowerCase()
-                        .trim()
-                )
-        );
+    if (flowers.some(product => String(product.id) === previousFlower)) flowerElement.value = previousFlower;
+    Array.from(giftElement.options).forEach(option => {
+        option.selected = previousGifts.includes(option.value);
+    });
 
-
-    // ==========================================
-    // FLOWER DROPDOWN
-    // ==========================================
-
-    flowerElement.innerHTML = `
-
-        <option value="">
-            Choose flowers
-        </option>
-
-        ${
-            flowers
-                .map(
-                    product => `
-
-                        <option
-    value="${product.id}"
->
-    ${product.name}
-</option>
-                    `
-                )
-                .join("")
+    function renderChoices(containerId, items, select) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        if (!items.length) {
+            container.innerHTML = `<p class="builder-empty-options">No ${containerId.includes("flower") ? "flowers" : "gifts"} are available right now.</p>`;
+            return;
         }
-
-    `;
-
-
-    // ==========================================
-    // GIFT DROPDOWN
-    // ==========================================
-
-    giftElement.innerHTML = `
-
-        <option value="">
-            No additional gift
-        </option>
-
-        ${
-            gifts
-                .map(
-                    product => `
-
-                        <option
-    value="${product.id}"
->
-    ${product.name}${formatGalleryPrice(product.price)
-        ? " — " + formatGalleryPrice(product.price)
-        : ""}
-</option>
-
-                    `
-                )
-                .join("")
-        }
-
-    `;
-
-
-    // ==========================================
-    // CALCULATE TOTAL
-    // ==========================================
-
-    function calculateTotal() {
-
-        const flower =
-            flowers.find(
-                product =>
-                    String(product.id) ===
-                    flowerElement.value
-            );
-
-
-        const gift =
-            gifts.find(
-                product =>
-                    String(product.id) ===
-                    giftElement.value
-            );
-
-
-        const total =
-            (flower
-                ? Number(flower.price)
-                : 0
-            ) +
-
-            (gift
-                ? Number(gift.price)
-                : 0
-            );
-
-
-        if (totalElement) {
-
-            totalElement.textContent =
-                money(total);
-
-        }
-
+        container.innerHTML = items.map(product => {
+            const id = String(product.id);
+            const selected = select.value === id;
+            const name = product.name;
+            const price = formatGalleryPrice(product.price);
+            const visual = imageMarkup(product, "builder-choice-image");
+            return `<button type="button" class="builder-choice-card${selected ? " selected" : ""}"
+                data-builder-choice="${safeText(id)}" aria-pressed="${selected}">
+                ${visual}<span class="builder-choice-name">${safeText(name)}</span>
+                <span class="builder-choice-price">${safeText(price || "Price on request")}</span>
+            </button>`;
+        }).join("");
+        container.querySelectorAll("[data-builder-choice]").forEach(button => {
+            button.addEventListener("click", () => {
+                select.value = button.dataset.builderChoice;
+                updatePreview();
+            });
+        });
     }
 
+    function renderGiftChoices(selectedGifts) {
+        const container = document.getElementById("builder-gift-options");
+        if (!container) return;
+        if (!gifts.length) {
+            container.innerHTML = '<p class="builder-empty-options">No gifts are available right now.</p>';
+            return;
+        }
+        container.innerHTML = gifts.map(product => {
+            const id = String(product.id);
+            const selected = selectedGifts.some(item => String(item.id) === id);
+            const price = formatGalleryPrice(product.price) || "Price on request";
+            return `<button type="button" class="builder-choice-card builder-gift-choice${selected ? " selected" : ""}"
+                data-builder-gift="${safeText(id)}" aria-pressed="${selected}">
+                ${imageMarkup(product, "builder-choice-image")}
+                <span class="builder-choice-name">${safeText(product.name)}</span>
+                <span class="builder-choice-price">${safeText(price)}</span>
+                <span class="builder-gift-action">${selected ? "✓ Added · Remove" : "+ Add gift"}</span>
+            </button>`;
+        }).join("");
+        container.querySelectorAll("[data-builder-gift]").forEach(button => {
+            button.addEventListener("click", () => {
+                const option = Array.from(giftElement.options).find(item => item.value === button.dataset.builderGift);
+                if (option) option.selected = !option.selected;
+                updatePreview();
+            });
+        });
+    }
 
-    flowerElement.onchange =
-        calculateTotal;
+    function updatePreview() {
+        const flower = flowers.find(product => String(product.id) === flowerElement.value);
+        const selectedGiftIds = Array.from(giftElement.selectedOptions, option => option.value);
+        const selectedGifts = gifts.filter(product => selectedGiftIds.includes(String(product.id)));
+        const selectedProducts = [flower, ...selectedGifts].filter(Boolean);
+        const priceOnRequest = selectedProducts.some(product => getBuilderPriceAmount(product) === null);
+        const total = selectedProducts.reduce((sum, product) => sum + (getBuilderPriceAmount(product) ?? 0), 0);
+        const totalElement = document.getElementById("builder-total");
+        if (totalElement) {
+            totalElement.textContent = priceOnRequest ? "Price on request" : money(total);
+        }
 
+        const empty = document.getElementById("builder-preview-empty");
+        const previewItems = document.getElementById("builder-preview-items");
+        if (empty) empty.hidden = Boolean(flower || selectedGifts.length);
+        if (previewItems) {
+            previewItems.innerHTML = selectedProducts.map(product => {
+                const isFlower = flower && String(product.id) === String(flower.id);
+                return `<article class="builder-preview-piece">
+                    ${imageMarkup(product, "builder-preview-image")}
+                    <span class="builder-selected-name">${safeText(product.name)}</span>
+                    <button type="button" class="builder-selected-remove"
+                        data-remove-builder-item="${safeText(product.id)}"
+                        data-builder-item-type="${isFlower ? "flower" : "gift"}"
+                        aria-label="Remove ${safeText(product.name)} from your gift">×</button>
+                </article>`;
+            }).join("");
+            previewItems.querySelectorAll("[data-remove-builder-item]").forEach(button => {
+                button.addEventListener("click", () => {
+                    if (button.dataset.builderItemType === "flower") {
+                        flowerElement.value = "";
+                    } else {
+                        const option = Array.from(giftElement.options).find(item => item.value === button.dataset.removeBuilderItem);
+                        if (option) option.selected = false;
+                    }
+                    updatePreview();
+                });
+            });
+        }
+        renderChoices("builder-flower-options", flowers, flowerElement);
+        renderGiftChoices(selectedGifts);
+    }
 
-    giftElement.onchange =
-        calculateTotal;
-
-
-    calculateTotal();
-
+    flowerElement.onchange = updatePreview;
+    giftElement.onchange = updatePreview;
+    updatePreview();
 }
 
 
@@ -2645,15 +2594,12 @@ function addCustomGift() {
 
 
     // ==========================================
-    // FIND SELECTED GIFT
+    // FIND ALL SELECTED GIFTS
     // ==========================================
 
-    const gift =
-        products.find(
-            product =>
-                String(product.id) ===
-                giftElement.value
-        );
+    const gifts = Array.from(giftElement.selectedOptions)
+        .map(option => products.find(product => String(product.id) === option.value))
+        .filter(Boolean);
 
 
     // ==========================================
@@ -2675,10 +2621,7 @@ function addCustomGift() {
     // CHECK AVAILABILITY
     // ==========================================
 
-    const selectedProducts =
-        gift
-            ? [flower, gift]
-            : [flower];
+    const selectedProducts = [flower, ...gifts];
 
 
     const unavailableProduct =
@@ -2709,9 +2652,7 @@ function addCustomGift() {
 
     const total =
         selectedProducts.reduce(
-            (sum, product) =>
-                sum +
-                Number(product.price),
+            (sum, product) => sum + (getBuilderPriceAmount(product) ?? 0),
 
             0
         );
@@ -2728,15 +2669,15 @@ function addCustomGift() {
             Date.now(),
 
         name:
-            gift
-                ? `${flower.name} + ${gift.name}`
+            gifts.length
+                ? [flower.name, ...gifts.map(gift => gift.name)].join(" + ")
                 : flower.name,
 
         price:
             total,
 
         image:
-            flower.image || "",
+            flower.image || flower.images?.[0] || "",
 
         emoji:
             "🎁",
@@ -2758,10 +2699,10 @@ function addCustomGift() {
                         product.name,
 
                     price:
-                        Number(product.price),
+                        getBuilderPriceAmount(product) ?? 0,
 
                     image:
-                        product.image || "",
+                        product.image || product.images?.[0] || "",
 
                     category:
                         product.category
