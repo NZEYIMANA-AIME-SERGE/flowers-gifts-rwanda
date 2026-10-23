@@ -198,6 +198,7 @@ function requireAdmin(req, res, next) {
     }
 }
 
+
 // Public admin login endpoint
 app.post("/api/auth/admin/login", (req, res) => {
     const { username, password } = req.body || {};
@@ -289,9 +290,10 @@ app.use("/api/admin", requireAdmin);
 // ADMIN - CREATE PRODUCT
 // ==========================================
 
+
 app.post(
     "/api/admin/products",
-    upload.single("image"),
+    upload.any(),
     async (req, res) => {
         try {
             const {
@@ -301,10 +303,12 @@ app.post(
                 category,
                 stock,
                 available,
-                occasion
+                occasion,
+                variationType,
+                variations: variationsJson
             } = req.body;
 
-            // Validate required product fields
+            // 1. Validate required fields
             if (
                 typeof name !== "string" ||
                 !name.trim() ||
@@ -317,56 +321,193 @@ app.post(
                 });
             }
 
-            let imageUrl = "";
-
-            // Upload image to Cloudinary when provided
-            if (req.file) {
-                const uploadResult = await new Promise(
-                    (resolve, reject) => {
-                        const uploadStream =
-                            cloudinary.uploader.upload_stream(
-                                {
-                                    folder: "flowers-gifts-rwanda"
-                                },
-                                (error, result) => {
-                                    if (error) {
-                                        reject(error);
-                                    } else {
-                                        resolve(result);
-                                    }
-                                }
-                            );
-
-                        uploadStream.end(req.file.buffer);
-                    }
-                );
-
-                imageUrl = uploadResult.secure_url;
-            }
-
-            // Blank and descriptive prices remain strings.
             const productPrice =
-                typeof price === "string"
-                    ? price.trim()
-                    : "";
+                typeof price === "string" ? price.trim() : "";
 
-            // Accept valid stock values; otherwise default to zero.
             const parsedStock =
-                stock !== undefined &&
-                String(stock).trim() !== ""
+                stock !== undefined && String(stock).trim() !== ""
                     ? Number(stock)
                     : 0;
 
-            if (
-                !Number.isInteger(parsedStock) ||
-                parsedStock < 0
-            ) {
+            if (!Number.isInteger(parsedStock) || parsedStock < 0) {
                 return res.status(400).json({
                     success: false,
                     message: "Stock must be a non-negative whole number."
                 });
             }
 
+            // 2. Validate variation data
+            const type = variationType || "none";
+            const allowedTypes = [
+                "none",
+                "color",
+                "size",
+                "arrangement"
+            ];
+
+            if (!allowedTypes.includes(type)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid product variation type."
+                });
+            }
+
+            let variationDefinitions = [];
+
+            if (variationsJson) {
+                try {
+                    variationDefinitions = JSON.parse(variationsJson);
+                } catch {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid variation data."
+                    });
+                }
+            }
+
+            if (!Array.isArray(variationDefinitions)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Variations must be a list."
+                });
+            }
+
+            if (type === "none" && variationDefinitions.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "A product without variations cannot contain variation options."
+                });
+            }
+
+            if (type !== "none" && variationDefinitions.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Add at least one product variation."
+                });
+            }
+
+            const files = req.files || [];
+
+            // Check all uploaded file types and variation photos.
+            const mainFiles = files.filter(
+                file => file.fieldname === "images" ||
+                        file.fieldname === "image"
+            );
+
+            if (type === "none" && mainFiles.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please upload at least one product photo."
+                });
+            }
+
+            if (type !== "none" && mainFiles.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Upload photos inside each variation."
+                });
+            }
+
+            const usedFieldNames = new Set();
+
+            for (const variation of variationDefinitions) {
+                if (
+                    !variation ||
+                    typeof variation.name !== "string" ||
+                    !variation.name.trim() ||
+                    typeof variation.fieldName !== "string" ||
+                    !/^variationImages_\d+$/.test(variation.fieldName) ||
+                    usedFieldNames.has(variation.fieldName)
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Each variation needs a valid name and photo field."
+                    });
+                }
+
+                usedFieldNames.add(variation.fieldName);
+
+                const variationFiles = files.filter(
+                    file => file.fieldname === variation.fieldName
+                );
+
+                if (variationFiles.length === 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: `Upload at least one photo for "${variation.name}".`
+                    });
+                }
+            }
+
+            // Reject files that do not belong to a recognised field.
+            const allowedFileFields = new Set([
+                "image",
+                "images",
+                ...variationDefinitions.map(v => v.fieldName)
+            ]);
+
+            if (files.some(file => !allowedFileFields.has(file.fieldname))) {
+                return res.status(400).json({
+                    success: false,
+                    message: "An uploaded photo has an unexpected field name."
+                });
+            }
+
+            // 3. Helper to upload a photo to Cloudinary
+            async function uploadPhoto(file) {
+                const result = await new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        {
+                            folder: "flowers-gifts-rwanda",
+                            resource_type: "image"
+                        },
+                        (error, uploadResult) => {
+                            if (error) {
+                                reject(error);
+                            } else {
+                                resolve(uploadResult);
+                            }
+                        }
+                    );
+
+                    stream.end(file.buffer);
+                });
+
+                return result.secure_url;
+            }
+
+            // 4. Upload ordinary product photos
+            const imageUrls = [];
+
+            for (const file of mainFiles) {
+                imageUrls.push(await uploadPhoto(file));
+            }
+
+            // Keep the first image in the legacy image field
+            // so existing product cards can continue to work.
+            const imageUrl = imageUrls[0] || "";
+
+            // 5. Upload photos for each variation separately
+            const savedVariations = [];
+
+            for (const variation of variationDefinitions) {
+                const variationFiles = files.filter(
+                    file => file.fieldname === variation.fieldName
+                );
+
+                const variationImageUrls = [];
+
+                for (const file of variationFiles) {
+                    variationImageUrls.push(await uploadPhoto(file));
+                }
+
+                savedVariations.push({
+                    name: variation.name.trim(),
+                    images: variationImageUrls
+                });
+            }
+
+            // 6. Create the product
             const product = new Product({
                 name: name.trim(),
                 description: description || "",
@@ -374,6 +515,9 @@ app.post(
                 price: productPrice,
                 category: category.trim(),
                 image: imageUrl,
+                images: imageUrls,
+                variationType: type,
+                variations: savedVariations,
                 stock: parsedStock,
                 available:
                     available === true ||
@@ -718,9 +862,10 @@ app.get("/api/admin/products", async (req, res) => {
 // ADMIN - UPDATE PRODUCT
 // ==========================================
 
+
 app.put(
     "/api/admin/products/:id",
-    upload.single("image"),
+    upload.any(),
     async (req, res) => {
         try {
             const { id } = req.params;
@@ -732,7 +877,9 @@ app.put(
                 category,
                 occasion,
                 stock,
-                available
+                available,
+                variationType,
+                variations: variationsJson
             } = req.body;
 
             if (!mongoose.isValidObjectId(id)) {
@@ -747,10 +894,11 @@ app.put(
             if (!product) {
                 return res.status(404).json({
                     success: false,
-                    message: "Product not found"
+                    message: "Product not found."
                 });
             }
 
+            // Update ordinary product information
             if (name !== undefined) {
                 if (!String(name).trim()) {
                     return res.status(400).json({
@@ -766,26 +914,30 @@ app.put(
                 product.description = description;
             }
 
-            
-if (price !== undefined) {
-    const cleanedPrice = String(price).trim();
+            if (price !== undefined) {
+                const cleanedPrice = String(price).trim();
 
-    if (cleanedPrice === "" || cleanedPrice.toLowerCase() === "null") {
-        product.price = null;
-    } else {
-        const parsedPrice = Number(cleanedPrice);
+                if (
+                    cleanedPrice !== "" &&
+                    cleanedPrice.toLowerCase() !== "null"
+                ) {
+                    const parsedPrice = Number(cleanedPrice);
 
-        if (!Number.isFinite(parsedPrice) || parsedPrice < 0) {
-            return res.status(400).json({
-                success: false,
-                message: "Price must be a non-negative number, or left blank."
-            });
-        }
+                    if (
+                        !Number.isFinite(parsedPrice) ||
+                        parsedPrice < 0
+                    ) {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Price must be a non-negative number, or left blank."
+                        });
+                    }
 
-        product.price = parsedPrice;
-    }
-}
-
+                    product.price = cleanedPrice;
+                } else {
+                    product.price = "";
+                }
+            }
 
             if (category !== undefined) {
                 if (!String(category).trim()) {
@@ -827,42 +979,191 @@ if (price !== undefined) {
                     available === "true";
             }
 
-            // Replace the image only when a new one is uploaded.
-            if (req.file) {
-                const uploadResult = await new Promise(
-                    (resolve, reject) => {
-                        const uploadStream =
-                            cloudinary.uploader.upload_stream(
-                                {
-                                    folder: "flowers-gifts-rwanda"
-                                },
-                                (error, result) => {
-                                    if (error) {
-                                        reject(error);
-                                    } else {
-                                        resolve(result);
-                                    }
-                                }
-                            );
+            const files = req.files || [];
 
-                        uploadStream.end(req.file.buffer);
-                    }
-                );
+            const mainFiles = files.filter(
+                file =>
+                    file.fieldname === "images" ||
+                    file.fieldname === "image"
+            );
 
-                product.image = uploadResult.secure_url;
+            const allowedTypes = [
+                "none",
+                "color",
+                "size",
+                "arrangement"
+            ];
+
+            const type = variationType || product.variationType || "none";
+
+            if (!allowedTypes.includes(type)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid product variation type."
+                });
             }
+
+            // Parse variation definitions, if supplied
+            let variationDefinitions = null;
+
+            if (variationsJson !== undefined) {
+                try {
+                    variationDefinitions = JSON.parse(variationsJson);
+                } catch {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid variation data."
+                    });
+                }
+
+                if (!Array.isArray(variationDefinitions)) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Variations must be a list."
+                    });
+                }
+            }
+
+            // Upload a photo to the existing Cloudinary folder
+            async function uploadPhoto(file) {
+                return await new Promise((resolve, reject) => {
+                    const stream = cloudinary.uploader.upload_stream(
+                        {
+                            folder: "flowers-gifts-rwanda",
+                            resource_type: "image"
+                        },
+                        (error, result) => {
+                            if (error) {
+                                reject(error);
+                            } else {
+                                resolve(result.secure_url);
+                            }
+                        }
+                    );
+
+                    stream.end(file.buffer);
+                });
+            }
+
+            // Update regular product photos only when new ones are uploaded.
+            // Existing images remain untouched when no files are selected.
+            if (mainFiles.length > 0) {
+                if (type !== "none") {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Upload photos inside each variation."
+                    });
+                }
+
+                const imageUrls = [];
+
+                for (const file of mainFiles) {
+                    imageUrls.push(await uploadPhoto(file));
+                }
+
+                product.images = imageUrls;
+                product.image = imageUrls[0] || "";
+                product.variationType = "none";
+                product.variations = [];
+            }
+
+            // Update variations only when valid variation data and new
+            // variation photos have actually been supplied.
+            if (
+                type !== "none" &&
+                variationDefinitions !== null
+            ) {
+                if (variationDefinitions.length === 0) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Add at least one product variation."
+                    });
+                }
+
+                const usedFields = new Set();
+                const savedVariations = [];
+
+                for (const variation of variationDefinitions) {
+                    if (
+                        !variation ||
+                        typeof variation.name !== "string" ||
+                        !variation.name.trim() ||
+                        typeof variation.fieldName !== "string" ||
+                        !/^variationImages_\d+$/.test(variation.fieldName) ||
+                        usedFields.has(variation.fieldName)
+                    ) {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Each variation needs a valid name and photo field."
+                        });
+                    }
+
+                    usedFields.add(variation.fieldName);
+
+                    const variationFiles = files.filter(
+                        file => file.fieldname === variation.fieldName
+                    );
+
+                    if (variationFiles.length === 0) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Upload at least one photo for "${variation.name}".`
+                        });
+                    }
+
+                    const imageUrls = [];
+
+                    for (const file of variationFiles) {
+                        imageUrls.push(await uploadPhoto(file));
+                    }
+
+                    savedVariations.push({
+                        name: variation.name.trim(),
+                        images: imageUrls
+                    });
+                }
+
+                const allowedFields = new Set([
+                    "image",
+                    "images",
+                    ...usedFields
+                ]);
+
+                if (
+                    files.some(file => !allowedFields.has(file.fieldname))
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "An uploaded photo has an unexpected field name."
+                    });
+                }
+
+                product.variationType = type;
+                product.variations = savedVariations;
+
+                // Keep legacy product cards working.
+                const firstVariationImage =
+                    savedVariations[0]?.images?.[0] || "";
+
+                product.image = firstVariationImage;
+                product.images = [];
+            }
+
+            // Switching explicitly to "no variations" is allowed when
+            // new regular product photos are uploaded.
+            // Otherwise, keep existing variation data intact.
 
             const updatedProduct = await product.save();
 
-            res.json({
+            return res.json({
                 success: true,
-                message: "Product updated successfully",
+                message: "Product updated successfully.",
                 product: updatedProduct
             });
         } catch (error) {
             console.error("Failed to update product:", error);
 
-            res.status(400).json({
+            return res.status(400).json({
                 success: false,
                 message: "Failed to update product",
                 error: error.message
@@ -870,6 +1171,7 @@ if (price !== undefined) {
         }
     }
 );
+
 
 // ==========================================
 // ADMIN - DELETE PRODUCT

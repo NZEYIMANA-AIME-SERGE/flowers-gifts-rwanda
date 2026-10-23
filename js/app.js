@@ -404,6 +404,7 @@ function renderFeatured() {
         );
 
 
+        
     element.innerHTML =
         availableProducts.length
 
@@ -555,12 +556,14 @@ function filterFlowersByOccasion(
     }
 
 
-    element.innerHTML =
-        filteredFlowers
-            .map(card)
-            .join("");
+   element.innerHTML =
+    shuffleProducts(filteredFlowers)
+        .map(card)
+        .join("");
 
 }
+
+
 
 
 function renderFlowerOccasionImages() {
@@ -624,22 +627,23 @@ function renderHomepageFlowers() {
     }
 
 
-    const flowers =
-        products.filter(
-            product => {
+ 
+const flowers = shuffleProducts(
+    products.filter(
+        product => {
+            const category =
+                (product.category || "")
+                    .toLowerCase()
+                    .trim();
 
-                const category =
-                    (product.category || "")
-                        .toLowerCase()
-                        .trim();
+            return (
+                product.available !== false &&
+                category === "flowers"
+            );
+        }
+    )
+);
 
-                return (
-                    product.available !== false &&
-                    category === "flowers"
-                );
-
-            }
-        );
 
 
     if (!flowers.length) {
@@ -704,6 +708,25 @@ function formatGalleryPrice(price) {
 
     return amount.toLocaleString("en-RW") + " RWF";
 }
+
+/* ==========================================
+   shuffling the products
+========================================== */
+
+
+function shuffleProducts(items) {
+    const shuffled = [...items];
+
+    for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [shuffled[i], shuffled[j]] =
+            [shuffled[j], shuffled[i]];
+    }
+
+    return shuffled;
+}
+
 
 
 /* ==========================================
@@ -2173,14 +2196,14 @@ function updateBuilder() {
     // FIND AVAILABLE FLOWERS
     // ==========================================
 
-    const flowers =
-        availableProducts.filter(
-            product =>
-                (product.category || "")
-                    .toLowerCase()
-                    .trim() === "flowers"
-        );
-
+   const flowers = shuffleProducts(
+    availableProducts.filter(
+        product =>
+            (product.category || "")
+                .toLowerCase()
+                .trim() === "flowers"
+    )
+);
 
     // ==========================================
     // GIFT CATEGORIES

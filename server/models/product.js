@@ -1,6 +1,7 @@
 
 const mongoose = require("mongoose");
 
+
 const productSchema = new mongoose.Schema(
     {
         name: {
@@ -32,9 +33,39 @@ const productSchema = new mongoose.Schema(
             trim: true
         },
 
+        // Keep this field for compatibility with existing products.
         image: {
             type: String,
             default: ""
+        },
+
+        // Additional images and selectable product variations.
+        images: {
+            type: [String],
+            default: []
+        },
+
+        variationType: {
+            type: String,
+            enum: ["none", "color", "size", "arrangement"],
+            default: "none"
+        },
+
+        variations: {
+            type: [
+                {
+                    name: {
+                        type: String,
+                        required: true,
+                        trim: true
+                    },
+                    images: {
+                        type: [String],
+                        default: []
+                    }
+                }
+            ],
+            default: []
         },
 
         stock: {

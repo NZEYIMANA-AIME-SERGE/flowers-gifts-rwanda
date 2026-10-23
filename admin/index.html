@@ -320,6 +320,10 @@
                                     <option value="anniversary">Anniversary</option>
                                     <option value="graduation">Graduation</option>
                                     <option value="wedding">Wedding</option>
+                                    
+<option value="baby-boy">For a Baby Boy</option>
+<option value="baby-girl">For a Baby Girl</option>
+  
                                     <option value="sympathy">Sympathy</option>
                                     <option value="thank-you">Thank You</option>
                                     <option value="just-because">Just Because</option>
@@ -346,22 +350,52 @@
                                 ></textarea>
                             </div>
 
-                            <div class="form-group full-width">
-                                <label for="product-image-file">Product Photo</label>
-                                <input
-                                    type="file"
-                                    id="product-image-file"
-                                    accept="image/*"
-                                >
-                                <small>
-                                    Choose a photo from your computer. Maximum size: 5 MB.
-                                </small>
-                                <img
-                                    id="product-image-preview"
-                                    src=""
-                                    alt="Product photo preview"
-                                >
-                            </div>
+
+<!-- Product image for products without variations -->
+<div class="form-group full-width" id="main-product-images-group">
+    <label for="product-image-files">Product Photos</label>
+
+    <input
+        type="file"
+        id="product-image-files"
+        accept="image/*"
+        multiple
+    >
+
+    <small>Choose multiple photos. Maximum 5 MB per image.</small>
+
+    <div id="product-image-previews"></div>
+</div>
+
+<!-- Variation type -->
+<div class="form-group full-width">
+    <label for="product-variation-type">Product Options</label>
+
+    <select id="product-variation-type">
+        <option value="none">No variations</option>
+        <option value="color">Colors (bags, accessories)</option>
+        <option value="size">Sizes (flowers, clothing)</option>
+        <option value="arrangement">Arrangements (flowers, gifts)</option>
+    </select>
+</div>
+
+<!-- Named variation groups will appear here -->
+<div class="form-group full-width" id="variation-groups-section" hidden>
+    <label>Product Variations</label>
+
+    <div id="variation-groups-container"></div>
+
+    <button type="button" id="add-variation-button">
+        + Add Another Variation
+    </button>
+
+    <small>
+        Give each variation a name and upload all photos belonging
+        to that option. Each variation can have multiple photos.
+    </small>
+</div>
+
+
                         </div>
 
                         <div class="checkbox-group">
@@ -634,9 +668,14 @@
             document.getElementById("product-manager-form").reset();
             document.getElementById("product-available").checked = true;
 
-            const preview = document.getElementById("product-image-preview");
-            preview.src = "";
-            preview.style.display = "none";
+           productImageInput.value = "";
+productImagePreviews.replaceChildren();
+
+variationTypeSelect.value = "none";
+variationGroupsSection.hidden = true;
+variationGroupsContainer.replaceChildren();
+variationGroupCounter = 0;
+mainProductImagesGroup.hidden = false;
 
             document.getElementById("product-form").classList.add("active");
             document.getElementById("product-form").scrollIntoView({
@@ -656,150 +695,242 @@
             preview.style.display = "none";
         }
 
-        function editProduct(productId) {
-            const product = allProducts.find(item => item._id === productId);
+       
+function editProduct(productId) {
+    const product = allProducts.find(item => item._id === productId);
 
-            if (!product) {
-                alert("Product not found.");
+    if (!product) {
+        alert("Product not found.");
+        return;
+    }
+
+    editingProductId = productId;
+
+    document.getElementById("product-form-title").textContent = "Edit Product";
+    document.getElementById("product-name").value = product.name || "";
+    document.getElementById("product-category").value = product.category || "other";
+    document.getElementById("product-occasion").value = product.occasion || "";
+    document.getElementById("product-price").value = product.price ?? "";
+    document.getElementById("product-description").value = product.description || "";
+    document.getElementById("product-available").checked = product.available !== false;
+    document.getElementById("save-product-button").textContent = "Update Product";
+
+    // Reset the new photo inputs.
+    productImageInput.value = "";
+    productImagePreviews.replaceChildren();
+
+    // Restore the product's variation type.
+    variationTypeSelect.value = product.variationType || "none";
+    variationGroupsContainer.replaceChildren();
+    variationGroupCounter = 0;
+
+    const hasVariations =
+        product.variationType &&
+        product.variationType !== "none";
+
+    variationGroupsSection.hidden = !hasVariations;
+    mainProductImagesGroup.hidden = Boolean(hasVariations);
+
+    if (hasVariations && Array.isArray(product.variations)) {
+        product.variations.forEach(variation => {
+            addVariationGroup(variation.name || "");
+
+            // Show previously saved images for reference.
+            const groups = variationGroupsContainer.querySelectorAll(".variation-group");
+            const currentGroup = groups[groups.length - 1];
+            const previews = currentGroup.querySelector(".variation-image-previews");
+
+            if (Array.isArray(variation.images)) {
+                variation.images.forEach(imageUrl => {
+                    const image = document.createElement("img");
+                    image.src = imageUrl;
+                    image.alt = variation.name || "Variation photo";
+                    image.style.width = "100px";
+                    image.style.height = "100px";
+                    image.style.objectFit = "cover";
+                    image.style.margin = "5px";
+                    image.style.borderRadius = "8px";
+                    previews.appendChild(image);
+                });
+            }
+        });
+    } else {
+        // Show saved regular product photos as previews.
+        const savedImages =
+            Array.isArray(product.images) && product.images.length
+                ? product.images
+                : product.image
+                    ? [product.image]
+                    : [];
+
+        savedImages.forEach(imageUrl => {
+            const image = document.createElement("img");
+            image.src = imageUrl;
+            image.alt = product.name || "Product photo";
+            image.style.width = "100px";
+            image.style.height = "100px";
+            image.style.objectFit = "cover";
+            image.style.margin = "5px";
+            image.style.borderRadius = "8px";
+            productImagePreviews.appendChild(image);
+        });
+    }
+
+    document.getElementById("product-form").classList.add("active");
+    document.getElementById("product-form").scrollIntoView({
+        behavior: "smooth",
+        block: "start"
+    });
+}
+
+       
+async function saveProduct(event) {
+    event.preventDefault();
+
+    const name = document.getElementById("product-name").value.trim();
+    const category = document.getElementById("product-category").value;
+    const occasion = document.getElementById("product-occasion").value;
+    const price = document.getElementById("product-price").value.trim();
+    const description = document.getElementById("product-description").value.trim();
+    const available = document.getElementById("product-available").checked;
+
+    // New multiple-photo input
+    const imageInput = document.getElementById("product-image-files");
+    const imageFiles = Array.from(imageInput.files);
+
+    const variationType = variationTypeSelect.value;
+    const variationGroups = Array.from(
+        variationGroupsContainer.querySelectorAll(".variation-group")
+    );
+
+    if (!name || !category) {
+        alert("Please enter a product name and choose a category.");
+        return;
+    }
+
+    if (
+        price !== "" &&
+        (!Number.isFinite(Number(price)) || Number(price) < 0)
+    ) {
+        alert("Enter a valid non-negative price, or leave it blank.");
+        return;
+    }
+
+    // Collect variation names and their selected photos
+    const variations = [];
+
+    if (variationType !== "none") {
+        if (variationGroups.length === 0) {
+            alert("Please add at least one product variation.");
+            return;
+        }
+
+        for (let i = 0; i < variationGroups.length; i++) {
+            const group = variationGroups[i];
+            const variationName = group
+                .querySelector(".variation-name")
+                .value.trim();
+
+            const variationFiles = Array.from(
+                group.querySelector(".variation-images").files
+            );
+
+            if (!variationName) {
+                alert(`Please enter a name for Variation ${i + 1}.`);
                 return;
             }
 
-            editingProductId = productId;
-
-            document.getElementById("product-form-title").textContent = "Edit Product";
-            document.getElementById("product-name").value = product.name || "";
-            document.getElementById("product-category").value = product.category || "other";
-            document.getElementById("product-occasion").value = product.occasion || "";
-            document.getElementById("product-price").value =
-                product.price ?? "";
-            document.getElementById("product-description").value =
-                product.description || "";
-            document.getElementById("product-available").checked =
-                product.available !== false;
-            document.getElementById("product-image-file").value = "";
-            document.getElementById("save-product-button").textContent = "Update Product";
-
-            const preview = document.getElementById("product-image-preview");
-
-            if (product.image) {
-                preview.src = product.image;
-                preview.style.display = "block";
-            } else {
-                preview.src = "";
-                preview.style.display = "none";
+            if (variationFiles.length === 0) {
+                alert(
+                    `Please select at least one photo for "${variationName}".`
+                );
+                return;
             }
 
-            document.getElementById("product-form").classList.add("active");
-            document.getElementById("product-form").scrollIntoView({
-                behavior: "smooth",
-                block: "start"
+            variations.push({
+                name: variationName,
+                fieldName: `variationImages_${i}`
+            });
+        }
+    } else if (imageFiles.length === 0 && !editingProductId) {
+        alert("Please select at least one product photo.");
+        return;
+    }
+
+    const saveButton = document.getElementById("save-product-button");
+    saveButton.disabled = true;
+    saveButton.textContent = "Saving...";
+
+    try {
+        const isEditing = Boolean(editingProductId);
+        const formData = new FormData();
+
+        formData.append("name", name);
+        formData.append("category", category);
+        formData.append("occasion", occasion);
+        formData.append("description", description);
+        formData.append("price", price);
+        formData.append("available", String(available));
+        formData.append("variationType", variationType);
+        formData.append("variations", JSON.stringify(variations));
+
+        // Photos for a product without variations
+        if (variationType === "none") {
+            imageFiles.forEach(file => {
+                formData.append("images", file);
+            });
+        } else {
+            // Photos belonging to each individual variation
+            variationGroups.forEach((group, index) => {
+                const files = Array.from(
+                    group.querySelector(".variation-images").files
+                );
+
+                files.forEach(file => {
+                    formData.append(`variationImages_${index}`, file);
+                });
             });
         }
 
-        async function saveProduct(event) {
-            event.preventDefault();
+        const url = isEditing
+            ? `${API_URL}/api/admin/products/${editingProductId}`
+            : `${API_URL}/api/admin/products`;
 
-            const name = document.getElementById("product-name").value.trim();
-            const category = document.getElementById("product-category").value;
-            const occasion = document.getElementById("product-occasion").value;
-            const price = document.getElementById("product-price").value.trim();
-            const description = document.getElementById("product-description").value.trim();
-            const available = document.getElementById("product-available").checked;
-            const imageInput = document.getElementById("product-image-file");
-            const imageFile = imageInput.files[0];
+        const response = await fetch(url, {
+            method: isEditing ? "PUT" : "POST",
+            body: formData
+        });
 
-            if (!name || !category) {
-                alert("Please enter a product name and choose a category.");
-                return;
-            }
+        const data = await response.json();
 
-            if (price !== "" && (!Number.isFinite(Number(price)) || Number(price) < 0)) {
-                alert("Enter a valid non-negative price, or leave it blank.");
-                return;
-            }
-
-            const saveButton = document.getElementById("save-product-button");
-            saveButton.disabled = true;
-            saveButton.textContent = "Saving...";
-
-            try {
-                const isEditing = Boolean(editingProductId);
-                let response;
-
-                if (!isEditing || imageFile) {
-                    const formData = new FormData();
-
-                    formData.append("name", name);
-                    formData.append("category", category);
-                    formData.append("occasion", occasion);
-                    formData.append("description", description);
-                    formData.append("available", String(available));
-
-                    formData.append("price", price);
-
-                    if (imageFile) {
-                        formData.append("image", imageFile);
-                    }
-
-                    const url = isEditing
-                        ? `${API_URL}/api/admin/products/${editingProductId}`
-                        : `${API_URL}/api/admin/products`;
-
-                    response = await fetch(url, {
-                        method: isEditing ? "PUT" : "POST",
-                        body: formData
-                    });
-                } else {
-                    const productData = {
-                        name,
-                        category,
-                        occasion,
-                        description,
-                        available
-                    };
-
-                  productData.price = price === "" ? null : Number(price);
-
-                    response = await fetch(
-                        `${API_URL}/api/admin/products/${editingProductId}`,
-                        {
-                            method: "PUT",
-                            headers: {
-                                "Content-Type": "application/json"
-                            },
-                            body: JSON.stringify(productData)
-                        }
-                    );
-                }
-
-                const data = await response.json();
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.message || "Failed to save product.");
-                }
-
-                showProductMessage(
-                    isEditing
-                        ? "Product updated successfully."
-                        : "Product added successfully.",
-                    "success"
-                );
-
-                closeProductForm();
-                await loadProducts();
-            } catch (error) {
-                console.error("Save product error:", error);
-                showProductMessage(
-                    `Failed to save product: ${error.message}`,
-                    "error"
-                );
-            } finally {
-                saveButton.disabled = false;
-                saveButton.textContent = editingProductId
-                    ? "Update Product"
-                    : "Save Product";
-            }
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || "Failed to save product.");
         }
+
+        showProductMessage(
+            isEditing
+                ? "Product updated successfully."
+                : "Product added successfully.",
+            "success"
+        );
+
+        closeProductForm();
+        await loadProducts();
+
+    } catch (error) {
+        console.error("Save product error:", error);
+
+        showProductMessage(
+            `Failed to save product: ${error.message}`,
+            "error"
+        );
+    } finally {
+        saveButton.disabled = false;
+        saveButton.textContent = editingProductId
+            ? "Update Product"
+            : "Save Product";
+    }
+}
 
         async function deleteProduct(productId) {
             const product = allProducts.find(item => item._id === productId);
@@ -833,36 +964,185 @@
             }
         }
 
-        // Product photo preview
-        const productImageInput = document.getElementById("product-image-file");
-        const productImagePreview = document.getElementById("product-image-preview");
+       
+        // Product photo previews - multiple images
+    
+const productImageInput =
+    document.getElementById("product-image-files");
 
-        productImageInput.addEventListener("change", function () {
-            const file = this.files[0];
+const productImagePreviews =
+    document.getElementById("product-image-previews");
 
-            if (!file) {
-                productImagePreview.src = "";
-                productImagePreview.style.display = "none";
-                return;
-            }
+const variationTypeSelect =
+    document.getElementById("product-variation-type");
 
-            if (!file.type.startsWith("image/")) {
-                alert("Please select an image file.");
-                this.value = "";
-                productImagePreview.style.display = "none";
-                return;
-            }
+const variationGroupsSection =
+    document.getElementById("variation-groups-section");
 
-            if (file.size > 5 * 1024 * 1024) {
-                alert("The photo must be 5 MB or smaller.");
-                this.value = "";
-                productImagePreview.style.display = "none";
-                return;
-            }
+const variationGroupsContainer =
+    document.getElementById("variation-groups-container");
 
-            productImagePreview.src = URL.createObjectURL(file);
-            productImagePreview.style.display = "block";
-        });
+const mainProductImagesGroup =
+    document.getElementById("main-product-images-group");
+
+const addVariationButton =
+    document.getElementById("add-variation-button");
+
+let variationGroupCounter = 0;
+
+function validateImageFiles(files) {
+    for (const file of files) {
+        if (!file.type.startsWith("image/")) {
+            alert("Please select image files only.");
+            return false;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert("Each photo must be 5 MB or smaller.");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function previewImages(files, previewContainer) {
+    previewContainer.replaceChildren();
+
+    Array.from(files).forEach(file => {
+        const image = document.createElement("img");
+
+        image.src = URL.createObjectURL(file);
+        image.alt = file.name;
+        image.style.width = "100px";
+        image.style.height = "100px";
+        image.style.objectFit = "cover";
+        image.style.margin = "5px";
+        image.style.borderRadius = "8px";
+
+        previewContainer.appendChild(image);
+    });
+}
+
+// Preview ordinary product photos.
+productImageInput.addEventListener("change", function () {
+    const files = Array.from(this.files);
+
+    if (!validateImageFiles(files)) {
+        this.value = "";
+        productImagePreviews.replaceChildren();
+        return;
+    }
+
+    previewImages(files, productImagePreviews);
+});
+
+// Show variation groups only when a variation type is selected.
+variationTypeSelect.addEventListener("change", function () {
+    const hasVariations = this.value !== "none";
+
+    variationGroupsSection.hidden = !hasVariations;
+    mainProductImagesGroup.hidden = hasVariations;
+
+    if (!hasVariations) {
+        variationGroupsContainer.replaceChildren();
+        variationGroupCounter = 0;
+    } else if (!variationGroupsContainer.children.length) {
+        addVariationGroup();
+    }
+});
+
+// Create one independent variation group.
+function addVariationGroup(name = "", existingImages = []) {
+    variationGroupCounter++;
+
+    const group = document.createElement("div");
+    group.className = "variation-group";
+    group.style.border = "1px solid #ddd";
+    group.style.borderRadius = "10px";
+    group.style.padding = "15px";
+    group.style.marginBottom = "15px";
+
+    const heading = document.createElement("h4");
+    heading.textContent = `Variation ${variationGroupCounter}`;
+
+    const nameLabel = document.createElement("label");
+    nameLabel.textContent =
+        variationTypeSelect.value === "color"
+            ? "Color name"
+            : variationTypeSelect.value === "size"
+                ? "Size name"
+                : "Arrangement name";
+
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.className = "variation-name";
+    nameInput.placeholder =
+        variationTypeSelect.value === "color"
+            ? "e.g. Black"
+            : variationTypeSelect.value === "size"
+                ? "e.g. Large"
+                : "e.g. Premium Roses";
+    nameInput.value = name;
+    nameInput.required = true;
+    nameInput.style.display = "block";
+    nameInput.style.width = "100%";
+    nameInput.style.marginBottom = "12px";
+
+    const photoLabel = document.createElement("label");
+    photoLabel.textContent = "Photos for this variation";
+
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*";
+    fileInput.multiple = true;
+    fileInput.className = "variation-images";
+    fileInput.style.display = "block";
+    fileInput.style.margin = "8px 0";
+
+    const help = document.createElement("small");
+    help.textContent = "Multiple images allowed; maximum 5 MB each.";
+
+    const previews = document.createElement("div");
+    previews.className = "variation-image-previews";
+
+    fileInput.addEventListener("change", function () {
+        const files = Array.from(this.files);
+
+        if (!validateImageFiles(files)) {
+            this.value = "";
+            previews.replaceChildren();
+            return;
+        }
+
+        previewImages(files, previews);
+    });
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.textContent = "Remove Variation";
+
+    removeButton.addEventListener("click", function () {
+        group.remove();
+    });
+
+    group.append(
+        heading,
+        nameLabel,
+        nameInput,
+        photoLabel,
+        fileInput,
+        help,
+        previews,
+        removeButton
+    );
+
+    variationGroupsContainer.appendChild(group);
+}
+
+addVariationButton.addEventListener("click", function () {
+    addVariationGroup();
+});
 
         async function initializeDashboard() {
             await checkServerConnection();
