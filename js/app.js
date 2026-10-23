@@ -416,21 +416,6 @@ function card(product) {
 
     const isFlower =
         (product.category || "").toLowerCase().trim() === "flowers";
-    const flowerOccasions = {
-        birthday: "Birthday",
-        romance: "Romance",
-        graduation: "Graduation",
-        wedding: "Wedding",
-        "baby-boy": "Baby Boy",
-        "baby-girl": "Baby Girl",
-        sympathy: "Sympathy",
-        "thank-you": "Thank You",
-        "just-because": "Just Because"
-    };
-    const occasionName = flowerOccasions[
-        String(product.occasion || "").toLowerCase().trim()
-    ];
-
     const variationLabel = {
         color: "Choose a color",
         size: "Choose a size",
@@ -441,7 +426,6 @@ function card(product) {
     return `
         <article class="product-card">
             <div class="product-image">
-                ${isFlower && occasionName ? `<span class="product-ribbon">${occasionName}</span>` : ""}
                 ${productVisual}
             </div>
 
