@@ -88,6 +88,28 @@ async function loadMongoProducts() {
                 .map(
                     (product, index) => {
 
+                        const productImages = Array.isArray(product.images)
+                            ? product.images.filter(Boolean)
+                            : [];
+
+                        const productVariations = Array.isArray(product.variations)
+                            ? product.variations
+                            : [];
+
+                        const firstVariationImage = productVariations
+                            .flatMap(variation =>
+                                Array.isArray(variation?.images)
+                                    ? variation.images
+                                    : []
+                            )
+                            .find(Boolean);
+
+                        const storefrontImage =
+                            product.image ||
+                            productImages[0] ||
+                            firstVariationImage ||
+                            "";
+
                         return {
 
                             // Simple frontend ID
@@ -113,10 +135,19 @@ async function loadMongoProducts() {
                                 product.description || "",
 
                             image:
-                                product.image || "",
+                                storefrontImage,
+
+                            images:
+                                productImages,
+
+                            variationType:
+                                product.variationType || "none",
+
+                            variations:
+                                productVariations,
 
                             emoji:
-                                product.image
+                                storefrontImage
                                     ? ""
                                     : "🎁",
 
@@ -215,7 +246,7 @@ function updateCount() {
 // ADD PRODUCT TO CART
 // ==========================================
 
-function addToCart(id) {
+function addToCart(id, variationName = "") {
 
     const product = products.find(
         product => product.id === id
@@ -245,6 +276,31 @@ function addToCart(id) {
 
     }
 
+    const hasVariations =
+        Array.isArray(product.variations) &&
+        product.variations.length > 0;
+
+    if (hasVariations && !variationName) {
+        variationName = product.variations[0]?.name || "";
+    }
+
+    const selectedVariation = hasVariations
+        ? product.variations.find(variation => variation.name === variationName)
+        : null;
+
+    if (hasVariations && !selectedVariation) {
+        alert("Please choose a valid product option.");
+        return;
+    }
+
+    const currentPhoto = document.querySelector("[data-product-main-image]")?.src;
+    const selectedVariationImages = selectedVariation?.images || [];
+    const cartImage = selectedVariation
+        ? (selectedVariationImages.includes(currentPhoto)
+            ? currentPhoto
+            : selectedVariationImages[0] || product.image || "")
+        : (product.image || "");
+
 
     // ==========================================
     // CHECK IF PRODUCT IS ALREADY IN CART
@@ -252,7 +308,9 @@ function addToCart(id) {
 
     const existingItem =
         cart.find(
-            item => item.id === id
+            item =>
+                item.id === id &&
+                (item.variationName || "") === (variationName || "")
         );
 
 
@@ -265,6 +323,15 @@ function addToCart(id) {
         cart.push({
 
             ...product,
+
+            ...(selectedVariation
+                ? {
+                    variationName: selectedVariation.name,
+                    variationType: product.variationType,
+                    image: cartImage,
+                    variationImages: selectedVariation.images || []
+                }
+                : {}),
 
             quantity: 1
 
@@ -287,11 +354,16 @@ function addToCart(id) {
  // ==========================================
 
 function card(product) {
+    const hasVariations =
+        Array.isArray(product.variations) &&
+        product.variations.length > 0;
+
     const productVisual = product.image
         ? `
             <img
                 src="${product.image}"
                 alt="${product.name}"
+                data-card-product-image="${product.id}"
             >
           `
         : `
@@ -303,20 +375,11 @@ function card(product) {
     const isFlower =
         (product.category || "").toLowerCase().trim() === "flowers";
 
-    const whatsappMessage =
-        `Hello Flowers & Gifts Rwanda! 🌸\n\n` +
-        `I would like to order this flower:\n` +
-        `Name: ${product.name}\n` +
-        `Quantity: 1\n` +
-        `Price: To be discussed\n` +
-        (product.image
-            ? `Product image: ${product.image}\n`
-            : "") +
-        `\nPlease let me know the price and delivery details. Thank you!`;
-
-    const whatsappURL =
-        `https://wa.me/${WHATSAPP_NUMBER}?text=` +
-        encodeURIComponent(whatsappMessage);
+    const variationLabel = {
+        color: "Choose a color",
+        size: "Choose a size",
+        arrangement: "Choose an arrangement"
+    }[product.variationType] || "Choose an option";
 
     return `
         <article class="product-card">
@@ -333,22 +396,31 @@ function card(product) {
                     ${getStorePriceHTML(product)}
                 </strong>
 
+                ${hasVariations ? `
+                    <label class="card-variation-label" for="card-variation-${product.id}">${variationLabel}</label>
+                    <select class="card-variation-select" id="card-variation-${product.id}"
+                        onchange="updateCardVariationPhoto(${product.id}, this.value)">
+                        ${product.variations.map((variation, index) => `
+                            <option value="${variation.name}"${index === 0 ? " selected" : ""}>${variation.name}</option>
+                        `).join("")}
+                    </select>
+                ` : ""}
+
                 ${
                     isFlower
                         ? `
                             <div class="product-actions">
                                 <button
                                     class="add-btn"
-                                    onclick="addToCart(${product.id})"
+                                    onclick="addToCart(${product.id}, document.getElementById('card-variation-${product.id}')?.value || '')"
                                 >
                                     Add to Cart
                                 </button>
 
                                 <a
                                     class="flower-whatsapp-btn"
-                                    href="${whatsappURL}"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                    href="#"
+                                    onclick="orderProductViaWhatsApp(${product.id}); return false;"
                                     aria-label="Order ${product.name} via WhatsApp"
                                 >
                                     <span class="whatsapp-icon">💬</span>
@@ -359,7 +431,7 @@ function card(product) {
                         : `
                             <button
                                 class="add-btn"
-                                onclick="addToCart(${product.id})"
+                                onclick="addToCart(${product.id}, document.getElementById('card-variation-${product.id}')?.value || '')"
                             >
                                 Add to Cart
                             </button>
@@ -375,6 +447,41 @@ function card(product) {
             </div>
         </article>
     `;
+}
+
+function updateCardVariationPhoto(productId, variationName) {
+    const product = products.find(item => item.id === productId);
+    const variation = product?.variations?.find(item => item.name === variationName);
+    const image = document.querySelector(`[data-card-product-image="${productId}"]`);
+    const nextImage = variation?.images?.find(Boolean);
+
+    if (image && nextImage) {
+        image.src = nextImage;
+        image.alt = `${product.name} - ${variation.name}`;
+    }
+}
+
+function orderProductViaWhatsApp(productId) {
+    const product = products.find(item => item.id === productId);
+    if (!product) return;
+
+    const variationName = document.getElementById(`card-variation-${productId}`)?.value || "";
+    const variation = product.variations?.find(item => item.name === variationName);
+    const image = variation?.images?.find(Boolean) || product.image || "";
+    const isFlower = (product.category || "").toLowerCase().trim() === "flowers";
+
+    let message = "Hello Flowers & Gifts Rwanda! 🌸\n\nI would like to order this product:\n";
+    message += `Name: ${product.name}\n`;
+    if (variationName) message += `${product.variationType || "Option"}: ${variationName}\n`;
+    message += "Quantity: 1\n";
+    message += isFlower
+        ? "Price: To be discussed\n"
+        : `Price: ${product.price || "To be discussed"}\n`;
+    if (image) message += `Product image: ${image}\n`;
+    message += "\nPlease let me know the delivery details. Thank you!";
+
+    const whatsappURL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+    window.open(whatsappURL, "_blank", "noopener,noreferrer");
 }
 
 
@@ -1590,32 +1697,38 @@ function renderProduct() {
     }
 
 
-    const productVisual =
+    const variations = Array.isArray(product.variations)
+        ? product.variations.filter(variation =>
+            variation && typeof variation.name === "string"
+        )
+        : [];
+    const firstVariation = variations[0];
+    const firstVariationImages = Array.isArray(firstVariation?.images)
+        ? firstVariation.images
+        : [];
+    const regularImages = [
+        ...(Array.isArray(product.images) ? product.images : []),
         product.image
-
-            ? `
-                <img
-                    src="${product.image}"
-                    alt="${product.name}"
-                    style="
-                        width:100%;
-                        height:100%;
-                        object-fit:cover;
-                    "
-                >
-              `
-
-            : product.emoji || "🎁";
+    ].filter((image, index, images) => image && images.indexOf(image) === index);
+    const initialImages = [...regularImages, ...firstVariationImages]
+        .filter((image, index, images) => image && images.indexOf(image) === index);
+    const initialImage = regularImages[0] || firstVariationImages[0] || "";
+    const imageMarkup = initialImage
+        ? `<img class="product-detail-main-image" src="${initialImage}" alt="${product.name}" data-product-main-image>`
+        : `<div class="product-placeholder product-detail-placeholder">${product.emoji || "🎁"}</div>`;
+    const optionLabel = {
+        color: "Choose a color",
+        size: "Choose a size",
+        arrangement: "Choose an arrangement"
+    }[product.variationType] || "Choose an option";
 
 
     element.innerHTML = `
 
         <div class="product-detail">
 
-            <div class="detail-art">
-
-                ${productVisual}
-
+            <div class="detail-art product-detail-gallery">
+                ${imageMarkup}
             </div>
 
 
@@ -1641,6 +1754,25 @@ function renderProduct() {
 
                 </p>
 
+                ${variations.length ? `
+                    <label class="product-variation-label" for="product-variation-select">${optionLabel}</label>
+                    <select id="product-variation-select" class="product-variation-select"
+                        onchange="selectProductVariation(${product.id}, this.value)">
+                        ${variations.map((variation, index) => `
+                            <option value="${variation.name}"${index === 0 ? " selected" : ""}>${variation.name}</option>
+                        `).join("")}
+                    </select>
+                ` : ""}
+
+                <div id="product-variation-photos" class="product-detail-thumbnails" aria-label="Selected option photos">
+                    ${initialImages.length > 1 ? initialImages.map((image, index) => `
+                        <button type="button" class="product-detail-thumbnail${index === 0 ? " is-active" : ""}" data-photo="${image}"
+                            aria-label="Show option photo ${index + 1}">
+                            <img src="${image}" alt="${product.name} photo ${index + 1}">
+                        </button>
+                    `).join("") : ""}
+                </div>
+
 
                 <h2>
 
@@ -1664,7 +1796,7 @@ function renderProduct() {
 
                 <button
                     class="btn primary"
-                    onclick="addToCart(${product.id})"
+                    onclick="addToCart(${product.id}, document.getElementById('product-variation-select')?.value || '')"
 
                     ${
                         product.available === false
@@ -1687,6 +1819,60 @@ function renderProduct() {
 
     `;
 
+    element.querySelectorAll(".product-detail-thumbnail").forEach(button => {
+        button.addEventListener("click", () => selectProductPhoto(button));
+    });
+
+}
+
+function selectProductVariation(productId, variationName) {
+    const product = products.find(item => item.id === productId);
+    const variation = product?.variations?.find(item => item.name === variationName);
+    const variationImages = Array.isArray(variation?.images)
+        ? variation.images.filter(Boolean)
+        : [];
+    const mainImages = [product?.image, ...(product?.images || [])].filter(Boolean);
+    const images = [...variationImages, ...mainImages]
+        .filter((image, index, allImages) => image && allImages.indexOf(image) === index);
+    const mainImage = document.querySelector("[data-product-main-image]");
+    const thumbnails = document.getElementById("product-variation-photos");
+
+    if (images.length) {
+        if (mainImage) {
+            mainImage.src = images[0];
+            mainImage.alt = `${product.name} - ${variation.name}`;
+        } else {
+            const gallery = document.querySelector(".product-detail-gallery");
+            if (gallery) {
+                gallery.innerHTML = `<img class="product-detail-main-image" src="${images[0]}" alt="${product.name} - ${variation.name}" data-product-main-image>`;
+            }
+        }
+    }
+
+    if (thumbnails) {
+        thumbnails.innerHTML = images.length > 1
+            ? images.map((image, index) => `
+                <button type="button" class="product-detail-thumbnail${index === 0 ? " is-active" : ""}"
+                    data-photo="${image}" aria-label="Show ${variation.name} photo ${index + 1}">
+                    <img src="${image}" alt="${product.name} - ${variation.name} photo ${index + 1}">
+                </button>
+            `).join("")
+            : "";
+
+        thumbnails.querySelectorAll(".product-detail-thumbnail").forEach(button => {
+            button.addEventListener("click", () => selectProductPhoto(button));
+        });
+    }
+}
+
+function selectProductPhoto(button) {
+    const image = document.querySelector("[data-product-main-image]");
+    if (!image || !button?.dataset.photo) return;
+
+    image.src = button.dataset.photo;
+    button.parentElement.querySelectorAll(".product-detail-thumbnail").forEach(item => {
+        item.classList.toggle("is-active", item === button);
+    });
 }
 
 
@@ -1912,6 +2098,7 @@ function renderCart() {
 
                 <div>
                     <strong>${item.name}</strong>
+                    ${item.variationName ? `<p class="cart-variation">${item.variationType || "Option"}: ${item.variationName}</p>` : ""}
                     ${componentDetails}
 
                     <p>
@@ -2001,6 +2188,9 @@ function orderViaWhatsApp() {
             : Number(item.price) * item.quantity;
 
         message += `${index + 1}. ${item.name}\n`;
+        if (item.variationName) {
+            message += `   ${item.variationType || "Option"}: ${item.variationName}\n`;
+        }
         message += `   Quantity: ${item.quantity}\n`;
 
         if (isFlower) {

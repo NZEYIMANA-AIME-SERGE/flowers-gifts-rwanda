@@ -477,6 +477,95 @@ h3 {
     border-radius: 25px;
 }
 
+.product-detail-gallery {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 12px;
+    padding: 14px;
+    font-size: 1rem;
+}
+
+.product-detail-main-image {
+    display: block;
+    width: 100%;
+    height: 410px;
+    object-fit: cover;
+    border-radius: 16px;
+}
+
+.product-detail-placeholder {
+    width: 100%;
+    min-height: 410px;
+    display: grid;
+    place-items: center;
+    font-size: 6rem;
+}
+
+.product-detail-thumbnails {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.product-detail-thumbnail {
+    width: 64px;
+    height: 64px;
+    padding: 2px;
+    border: 2px solid transparent;
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+}
+
+.product-detail-thumbnail.is-active {
+    border-color: var(--rose);
+}
+
+.product-detail-thumbnail img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.product-variation-label {
+    display: block;
+    margin: 22px 0 7px;
+    font-weight: 700;
+}
+
+.product-variation-select {
+    width: 100%;
+    max-width: 420px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    font: inherit;
+}
+
+.cart-variation {
+    margin: 4px 0;
+    color: var(--muted);
+}
+
+.card-variation-label {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.card-variation-select {
+    width: 100%;
+    margin-top: 6px;
+    padding: 10px;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+    background: #fff;
+    font: inherit;
+}
+
 
 /* =========================
    CART

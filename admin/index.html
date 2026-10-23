@@ -351,9 +351,9 @@
                             </div>
 
 
-<!-- Product image for products without variations -->
+<!-- Main product photos may be combined with variation photos -->
 <div class="form-group full-width" id="main-product-images-group">
-    <label for="product-image-files">Product Photos</label>
+    <label for="product-image-files">Main Product Photos</label>
 
     <input
         type="file"
@@ -362,7 +362,7 @@
         multiple
     >
 
-    <small>Choose multiple photos. Maximum 5 MB per image.</small>
+    <small>Shown as the main storefront photos. Required when there are no variations; optional when variation photos are added below. Maximum 5 MB per image.</small>
 
     <div id="product-image-previews"></div>
 </div>
@@ -597,68 +597,93 @@
             })[character]);
         }
 
-        function renderProducts() {
-            const container = document.getElementById("products-container");
+      
+function renderProducts() {
+    const container = document.getElementById("products-container");
 
-            if (allProducts.length === 0) {
-                container.innerHTML = `
-                    <div class="loading">
-                        No products found. Click “Add Product” to add your first product.
-                    </div>
-                `;
-                return;
-            }
+    if (allProducts.length === 0) {
+        container.innerHTML = `
+            <div class="loading">
+                No products found. Click “Add Product” to add your first product.
+            </div>
+        `;
+        return;
+    }
 
-            container.innerHTML = `
-                <table class="product-table">
-                    <thead>
+    container.innerHTML = `
+        <table class="product-table">
+            <thead>
+                <tr>
+                    <th>Photo</th>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Availability</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${allProducts.map(product => {
+                    // Support legacy images, regular multiple images,
+                    // and images stored inside product variations.
+                    const variationImage = Array.isArray(product.variations)
+                        ? product.variations.find(
+                            variation =>
+                                Array.isArray(variation.images) &&
+                                variation.images.length > 0
+                        )?.images?.[0]
+                        : "";
+
+                    const productImage =
+                        product.image ||
+                        (Array.isArray(product.images)
+                            ? product.images[0]
+                            : "") ||
+                        variationImage ||
+                        "";
+
+                    const imageHTML = productImage
+                        ? `<img
+                                src="${escapeHTML(productImage)}"
+                                alt="${escapeHTML(product.name)}"
+                                style="width:60px;height:60px;object-fit:cover;border-radius:8px;"
+                                onerror="this.style.display='none';this.nextElementSibling.style.display='inline';"
+                           >
+                           <span style="display:none;">Image unavailable</span>`
+                        : "No image";
+
+                    const available = product.available !== false;
+
+                    return `
                         <tr>
-                            <th>Photo</th>
-                            <th>Product</th>
-                            <th>Category</th>
-                            <th>Price</th>
-                            <th>Availability</th>
-                            <th>Actions</th>
+                            <td>${imageHTML}</td>
+                            <td>
+                                <strong>${escapeHTML(product.name)}</strong>
+                            </td>
+                            <td>${escapeHTML(product.category)}</td>
+                            <td>${formatMoney(product.price)}</td>
+                            <td class="${available ? "availability-on" : "availability-off"}">
+                                ${available ? "Available" : "Hidden"}
+                            </td>
+                            <td>
+                                <div class="product-actions">
+                                    <button
+                                        class="small-button edit-button"
+                                        onclick="editProduct('${escapeHTML(product._id)}')"
+                                    >Edit</button>
+                                    <button
+                                        class="small-button delete-button"
+                                        onclick="deleteProduct('${escapeHTML(product._id)}')"
+                                    >Delete</button>
+                                </div>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${allProducts.map(product => {
-                            const imageHTML = product.image
-                                ? `<img src="${escapeHTML(product.image)}"
-                                    alt="${escapeHTML(product.name)}"
-                                    style="width:60px;height:60px;object-fit:cover;border-radius:8px;">`
-                                : "No image";
-
-                            const available = product.available !== false;
-
-                            return `
-                                <tr>
-                                    <td>${imageHTML}</td>
-                                    <td><strong>${escapeHTML(product.name)}</strong></td>
-                                    <td>${escapeHTML(product.category)}</td>
-                                    <td>${formatMoney(product.price)}</td>
-                                    <td class="${available ? "availability-on" : "availability-off"}">
-                                        ${available ? "Available" : "Hidden"}
-                                    </td>
-                                    <td>
-                                        <div class="product-actions">
-                                            <button
-                                                class="small-button edit-button"
-                                                onclick="editProduct('${escapeHTML(product._id)}')"
-                                            >Edit</button>
-                                            <button
-                                                class="small-button delete-button"
-                                                onclick="deleteProduct('${escapeHTML(product._id)}')"
-                                            >Delete</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `;
-                        }).join("")}
-                    </tbody>
-                </table>
-            `;
-        }
+                    `;
+                }).join("")}
+            </tbody>
+        </table>
+    `;
+}
 
         function openAddProductForm() {
             editingProductId = null;
@@ -690,9 +715,14 @@ mainProductImagesGroup.hidden = false;
             document.getElementById("product-available").checked = true;
             document.getElementById("product-form").classList.remove("active");
 
-            const preview = document.getElementById("product-image-preview");
-            preview.src = "";
-            preview.style.display = "none";
+            productImageInput.value = "";
+productImagePreviews.replaceChildren();
+
+variationTypeSelect.value = "none";
+variationGroupsSection.hidden = true;
+variationGroupsContainer.replaceChildren();
+variationGroupCounter = 0;
+mainProductImagesGroup.hidden = false;
         }
 
        
@@ -729,9 +759,25 @@ function editProduct(productId) {
         product.variationType !== "none";
 
     variationGroupsSection.hidden = !hasVariations;
-    mainProductImagesGroup.hidden = Boolean(hasVariations);
+    mainProductImagesGroup.hidden = false;
 
     if (hasVariations && Array.isArray(product.variations)) {
+        const savedMainImages = Array.isArray(product.images)
+            ? product.images
+            : [];
+
+        savedMainImages.forEach(imageUrl => {
+            const image = document.createElement("img");
+            image.src = imageUrl;
+            image.alt = product.name || "Main product photo";
+            image.style.width = "100px";
+            image.style.height = "100px";
+            image.style.objectFit = "cover";
+            image.style.margin = "5px";
+            image.style.borderRadius = "8px";
+            productImagePreviews.appendChild(image);
+        });
+
         product.variations.forEach(variation => {
             addVariationGroup(variation.name || "");
 
@@ -874,12 +920,12 @@ async function saveProduct(event) {
         formData.append("variationType", variationType);
         formData.append("variations", JSON.stringify(variations));
 
-        // Photos for a product without variations
-        if (variationType === "none") {
-            imageFiles.forEach(file => {
-                formData.append("images", file);
-            });
-        } else {
+        // Main photos can be used with or without variations.
+        imageFiles.forEach(file => {
+            formData.append("images", file);
+        });
+
+        if (variationType !== "none") {
             // Photos belonging to each individual variation
             variationGroups.forEach((group, index) => {
                 const files = Array.from(
@@ -1042,7 +1088,7 @@ variationTypeSelect.addEventListener("change", function () {
     const hasVariations = this.value !== "none";
 
     variationGroupsSection.hidden = !hasVariations;
-    mainProductImagesGroup.hidden = hasVariations;
+    mainProductImagesGroup.hidden = false;
 
     if (!hasVariations) {
         variationGroupsContainer.replaceChildren();

@@ -401,13 +401,6 @@ app.post(
                 });
             }
 
-            if (type !== "none" && mainFiles.length > 0) {
-                return res.status(400).json({
-                    success: false,
-                    message: "Upload photos inside each variation."
-                });
-            }
-
             const usedFieldNames = new Set();
 
             for (const variation of variationDefinitions) {
@@ -514,7 +507,7 @@ app.post(
                 occasion: occasion || "",
                 price: productPrice,
                 category: category.trim(),
-                image: imageUrl,
+                image: imageUrl || savedVariations[0]?.images?.[0] || "",
                 images: imageUrls,
                 variationType: type,
                 variations: savedVariations,
@@ -1045,16 +1038,8 @@ app.put(
                 });
             }
 
-            // Update regular product photos only when new ones are uploaded.
-            // Existing images remain untouched when no files are selected.
+            // Update main storefront photos without replacing variation data.
             if (mainFiles.length > 0) {
-                if (type !== "none") {
-                    return res.status(400).json({
-                        success: false,
-                        message: "Upload photos inside each variation."
-                    });
-                }
-
                 const imageUrls = [];
 
                 for (const file of mainFiles) {
@@ -1063,6 +1048,9 @@ app.put(
 
                 product.images = imageUrls;
                 product.image = imageUrls[0] || "";
+            }
+
+            if (type === "none") {
                 product.variationType = "none";
                 product.variations = [];
             }
@@ -1141,12 +1129,12 @@ app.put(
                 product.variationType = type;
                 product.variations = savedVariations;
 
-                // Keep legacy product cards working.
+                // Use a variation photo as the fallback only when there is
+                // no separate main storefront photo.
                 const firstVariationImage =
                     savedVariations[0]?.images?.[0] || "";
 
-                product.image = firstVariationImage;
-                product.images = [];
+                product.image = product.image || firstVariationImage;
             }
 
             // Switching explicitly to "no variations" is allowed when
