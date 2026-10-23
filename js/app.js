@@ -241,6 +241,44 @@ function updateCount() {
 
 }
 
+function getStorefrontProductOptions(product) {
+    const variations = Array.isArray(product?.variations)
+        ? product.variations
+        : [];
+
+    if (!variations.length) return [];
+
+    const variationImageUrls = variations.flatMap(variation =>
+        Array.isArray(variation?.images) ? variation.images : []
+    );
+    const mainImages = [
+        ...(Array.isArray(product.images) ? product.images : []),
+        product.image
+    ].filter((image, index, images) => image && images.indexOf(image) === index);
+    const hasSeparateMainPhoto =
+        (Array.isArray(product.images) && product.images.some(Boolean)) ||
+        (product.image && !variationImageUrls.includes(product.image));
+
+    return [
+        ...(hasSeparateMainPhoto
+            ? [{
+                name: "Main photo",
+                value: "__main_image__",
+                type: "Photo",
+                images: mainImages
+            }]
+            : []),
+        ...variations
+            .filter(variation => variation && typeof variation.name === "string")
+            .map(variation => ({
+                name: variation.name,
+                value: variation.name,
+                type: product.variationType || "Option",
+                images: Array.isArray(variation.images) ? variation.images : []
+            }))
+    ];
+}
+
 
 // ==========================================
 // ADD PRODUCT TO CART
@@ -280,25 +318,27 @@ function addToCart(id, variationName = "") {
         Array.isArray(product.variations) &&
         product.variations.length > 0;
 
+    const productOptions = getStorefrontProductOptions(product);
+
     if (hasVariations && !variationName) {
-        variationName = product.variations[0]?.name || "";
+        variationName = productOptions[0]?.value || "";
     }
 
-    const selectedVariation = hasVariations
-        ? product.variations.find(variation => variation.name === variationName)
+    const selectedOption = hasVariations
+        ? productOptions.find(option => option.value === variationName)
         : null;
 
-    if (hasVariations && !selectedVariation) {
+    if (hasVariations && !selectedOption) {
         alert("Please choose a valid product option.");
         return;
     }
 
     const currentPhoto = document.querySelector("[data-product-main-image]")?.src;
-    const selectedVariationImages = selectedVariation?.images || [];
-    const cartImage = selectedVariation
-        ? (selectedVariationImages.includes(currentPhoto)
+    const selectedOptionImages = selectedOption?.images || [];
+    const cartImage = selectedOption
+        ? (selectedOptionImages.includes(currentPhoto)
             ? currentPhoto
-            : selectedVariationImages[0] || product.image || "")
+            : selectedOptionImages[0] || product.image || "")
         : (product.image || "");
 
 
@@ -310,7 +350,7 @@ function addToCart(id, variationName = "") {
         cart.find(
             item =>
                 item.id === id &&
-                (item.variationName || "") === (variationName || "")
+                (item.selectedOptionValue || "") === (selectedOption?.value || "")
         );
 
 
@@ -324,12 +364,13 @@ function addToCart(id, variationName = "") {
 
             ...product,
 
-            ...(selectedVariation
+            ...(selectedOption
                 ? {
-                    variationName: selectedVariation.name,
-                    variationType: product.variationType,
+                    variationName: selectedOption.name,
+                    variationType: selectedOption.type,
+                    selectedOptionValue: selectedOption.value,
                     image: cartImage,
-                    variationImages: selectedVariation.images || []
+                    variationImages: selectedOption.images || []
                 }
                 : {}),
 
@@ -357,6 +398,7 @@ function card(product) {
     const hasVariations =
         Array.isArray(product.variations) &&
         product.variations.length > 0;
+    const productOptions = getStorefrontProductOptions(product);
 
     const productVisual = product.image
         ? `
@@ -400,8 +442,8 @@ function card(product) {
                     <label class="card-variation-label" for="card-variation-${product.id}">${variationLabel}</label>
                     <select class="card-variation-select" id="card-variation-${product.id}"
                         onchange="updateCardVariationPhoto(${product.id}, this.value)">
-                        ${product.variations.map((variation, index) => `
-                            <option value="${variation.name}"${index === 0 ? " selected" : ""}>${variation.name}</option>
+                        ${productOptions.map((option, index) => `
+                            <option value="${option.value}"${index === 0 ? " selected" : ""}>${option.name}</option>
                         `).join("")}
                     </select>
                 ` : ""}
@@ -451,13 +493,14 @@ function card(product) {
 
 function updateCardVariationPhoto(productId, variationName) {
     const product = products.find(item => item.id === productId);
-    const variation = product?.variations?.find(item => item.name === variationName);
+    const option = getStorefrontProductOptions(product)
+        .find(item => item.value === variationName);
     const image = document.querySelector(`[data-card-product-image="${productId}"]`);
-    const nextImage = variation?.images?.find(Boolean);
+    const nextImage = option?.images?.find(Boolean);
 
     if (image && nextImage) {
         image.src = nextImage;
-        image.alt = `${product.name} - ${variation.name}`;
+        image.alt = `${product.name} - ${option.name}`;
     }
 }
 
@@ -465,14 +508,15 @@ function orderProductViaWhatsApp(productId) {
     const product = products.find(item => item.id === productId);
     if (!product) return;
 
-    const variationName = document.getElementById(`card-variation-${productId}`)?.value || "";
-    const variation = product.variations?.find(item => item.name === variationName);
-    const image = variation?.images?.find(Boolean) || product.image || "";
+    const optionValue = document.getElementById(`card-variation-${productId}`)?.value || "";
+    const option = getStorefrontProductOptions(product)
+        .find(item => item.value === optionValue);
+    const image = option?.images?.find(Boolean) || product.image || "";
     const isFlower = (product.category || "").toLowerCase().trim() === "flowers";
 
     let message = "Hello Flowers & Gifts Rwanda! 🌸\n\nI would like to order this product:\n";
     message += `Name: ${product.name}\n`;
-    if (variationName) message += `${product.variationType || "Option"}: ${variationName}\n`;
+    if (option) message += `${option.type}: ${option.name}\n`;
     message += "Quantity: 1\n";
     message += isFlower
         ? "Price: To be discussed\n"
@@ -1702,6 +1746,7 @@ function renderProduct() {
             variation && typeof variation.name === "string"
         )
         : [];
+    const productOptions = getStorefrontProductOptions(product);
     const firstVariation = variations[0];
     const firstVariationImages = Array.isArray(firstVariation?.images)
         ? firstVariation.images
@@ -1758,8 +1803,8 @@ function renderProduct() {
                     <label class="product-variation-label" for="product-variation-select">${optionLabel}</label>
                     <select id="product-variation-select" class="product-variation-select"
                         onchange="selectProductVariation(${product.id}, this.value)">
-                        ${variations.map((variation, index) => `
-                            <option value="${variation.name}"${index === 0 ? " selected" : ""}>${variation.name}</option>
+                        ${productOptions.map((option, index) => `
+                            <option value="${option.value}"${index === 0 ? " selected" : ""}>${option.name}</option>
                         `).join("")}
                     </select>
                 ` : ""}
@@ -1827,34 +1872,40 @@ function renderProduct() {
 
 function selectProductVariation(productId, variationName) {
     const product = products.find(item => item.id === productId);
-    const variation = product?.variations?.find(item => item.name === variationName);
-    const variationImages = Array.isArray(variation?.images)
-        ? variation.images.filter(Boolean)
+    const option = getStorefrontProductOptions(product)
+        .find(item => item.value === variationName);
+    if (!product || !option) return;
+
+    const optionImages = Array.isArray(option.images)
+        ? option.images.filter(Boolean)
         : [];
     const mainImages = [product?.image, ...(product?.images || [])].filter(Boolean);
-    const images = [...variationImages, ...mainImages]
+    const images = [...optionImages, ...mainImages]
         .filter((image, index, allImages) => image && allImages.indexOf(image) === index);
     const mainImage = document.querySelector("[data-product-main-image]");
     const thumbnails = document.getElementById("product-variation-photos");
 
     if (images.length) {
         if (mainImage) {
-            mainImage.src = images[0];
-            mainImage.alt = `${product.name} - ${variation.name}`;
+            mainImage.src = optionImages[0] || images[0];
+            mainImage.alt = `${product.name} - ${option.name}`;
         } else {
             const gallery = document.querySelector(".product-detail-gallery");
             if (gallery) {
-                gallery.innerHTML = `<img class="product-detail-main-image" src="${images[0]}" alt="${product.name} - ${variation.name}" data-product-main-image>`;
+                gallery.innerHTML = `<img class="product-detail-main-image" src="${optionImages[0] || images[0]}" alt="${product.name} - ${option.name}" data-product-main-image>`;
             }
         }
     }
 
     if (thumbnails) {
-        thumbnails.innerHTML = images.length > 1
-            ? images.map((image, index) => `
+        const optionPhotoList = option.value === "__main_image__"
+            ? optionImages
+            : images;
+        thumbnails.innerHTML = optionPhotoList.length > 1
+            ? optionPhotoList.map((image, index) => `
                 <button type="button" class="product-detail-thumbnail${index === 0 ? " is-active" : ""}"
-                    data-photo="${image}" aria-label="Show ${variation.name} photo ${index + 1}">
-                    <img src="${image}" alt="${product.name} - ${variation.name} photo ${index + 1}">
+                    data-photo="${image}" aria-label="Show ${option.name} photo ${index + 1}">
+                    <img src="${image}" alt="${product.name} - ${option.name} photo ${index + 1}">
                 </button>
             `).join("")
             : "";

@@ -1072,13 +1072,17 @@ app.put(
                 const savedVariations = [];
 
                 for (const variation of variationDefinitions) {
+                    const hasFieldName =
+                        variation && variation.fieldName !== undefined;
+
                     if (
                         !variation ||
                         typeof variation.name !== "string" ||
                         !variation.name.trim() ||
-                        typeof variation.fieldName !== "string" ||
-                        !/^variationImages_\d+$/.test(variation.fieldName) ||
-                        usedFields.has(variation.fieldName)
+                        (hasFieldName &&
+                            (typeof variation.fieldName !== "string" ||
+                                !/^variationImages_\d+$/.test(variation.fieldName) ||
+                                usedFields.has(variation.fieldName)))
                     ) {
                         return res.status(400).json({
                             success: false,
@@ -1086,23 +1090,40 @@ app.put(
                         });
                     }
 
-                    usedFields.add(variation.fieldName);
-
-                    const variationFiles = files.filter(
-                        file => file.fieldname === variation.fieldName
-                    );
-
-                    if (variationFiles.length === 0) {
-                        return res.status(400).json({
-                            success: false,
-                            message: `Upload at least one photo for "${variation.name}".`
-                        });
+                    if (hasFieldName) {
+                        usedFields.add(variation.fieldName);
                     }
+
+                    const variationFiles = hasFieldName
+                        ? files.filter(file => file.fieldname === variation.fieldName)
+                        : [];
 
                     const imageUrls = [];
 
                     for (const file of variationFiles) {
                         imageUrls.push(await uploadPhoto(file));
+                    }
+
+                    if (imageUrls.length === 0) {
+                        const originalName =
+                            typeof variation.previousName === "string" &&
+                            variation.previousName.trim()
+                                ? variation.previousName.trim()
+                                : variation.name.trim();
+                        const existingVariation = product.variations.find(
+                            savedVariation => savedVariation.name === originalName
+                        );
+
+                        if (Array.isArray(existingVariation?.images)) {
+                            imageUrls.push(...existingVariation.images);
+                        }
+                    }
+
+                    if (imageUrls.length === 0) {
+                        return res.status(400).json({
+                            success: false,
+                            message: `Upload at least one photo for "${variation.name}".`
+                        });
                     }
 
                     savedVariations.push({

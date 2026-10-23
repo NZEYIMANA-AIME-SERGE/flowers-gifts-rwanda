@@ -779,26 +779,11 @@ function editProduct(productId) {
         });
 
         product.variations.forEach(variation => {
-            addVariationGroup(variation.name || "");
-
-            // Show previously saved images for reference.
-            const groups = variationGroupsContainer.querySelectorAll(".variation-group");
-            const currentGroup = groups[groups.length - 1];
-            const previews = currentGroup.querySelector(".variation-image-previews");
-
-            if (Array.isArray(variation.images)) {
-                variation.images.forEach(imageUrl => {
-                    const image = document.createElement("img");
-                    image.src = imageUrl;
-                    image.alt = variation.name || "Variation photo";
-                    image.style.width = "100px";
-                    image.style.height = "100px";
-                    image.style.objectFit = "cover";
-                    image.style.margin = "5px";
-                    image.style.borderRadius = "8px";
-                    previews.appendChild(image);
-                });
-            }
+            addVariationGroup(
+                variation.name || "",
+                Array.isArray(variation.images) ? variation.images : [],
+                variation.name || ""
+            );
         });
     } else {
         // Show saved regular product photos as previews.
@@ -877,16 +862,15 @@ async function saveProduct(event) {
                 .querySelector(".variation-name")
                 .value.trim();
 
-            const variationFiles = Array.from(
-                group.querySelector(".variation-images").files
-            );
+            const variationFiles = Array.from(group.querySelector(".variation-images").files);
+            const savedImages = JSON.parse(group.dataset.savedImages || "[]");
 
             if (!variationName) {
                 alert(`Please enter a name for Variation ${i + 1}.`);
                 return;
             }
 
-            if (variationFiles.length === 0) {
+            if (variationFiles.length === 0 && savedImages.length === 0) {
                 alert(
                     `Please select at least one photo for "${variationName}".`
                 );
@@ -895,7 +879,11 @@ async function saveProduct(event) {
 
             variations.push({
                 name: variationName,
-                fieldName: `variationImages_${i}`
+                previousName: group.dataset.originalName || "",
+                images: savedImages,
+                ...(variationFiles.length > 0
+                    ? { fieldName: `variationImages_${i}` }
+                    : {})
             });
         }
     } else if (imageFiles.length === 0 && !editingProductId) {
@@ -1099,11 +1087,13 @@ variationTypeSelect.addEventListener("change", function () {
 });
 
 // Create one independent variation group.
-function addVariationGroup(name = "", existingImages = []) {
+function addVariationGroup(name = "", existingImages = [], originalName = "") {
     variationGroupCounter++;
 
     const group = document.createElement("div");
     group.className = "variation-group";
+    group.dataset.savedImages = JSON.stringify(existingImages);
+    group.dataset.originalName = originalName;
     group.style.border = "1px solid #ddd";
     group.style.borderRadius = "10px";
     group.style.padding = "15px";
@@ -1147,10 +1137,24 @@ function addVariationGroup(name = "", existingImages = []) {
     fileInput.style.margin = "8px 0";
 
     const help = document.createElement("small");
-    help.textContent = "Multiple images allowed; maximum 5 MB each.";
+    help.textContent = existingImages.length
+        ? "Saved photos stay with this option. Select new photos only to replace them; maximum 5 MB each."
+        : "Add one or more photos for this option; maximum 5 MB each.";
 
     const previews = document.createElement("div");
     previews.className = "variation-image-previews";
+
+    existingImages.forEach(imageUrl => {
+        const image = document.createElement("img");
+        image.src = imageUrl;
+        image.alt = name || "Variation photo";
+        image.style.width = "100px";
+        image.style.height = "100px";
+        image.style.objectFit = "cover";
+        image.style.margin = "5px";
+        image.style.borderRadius = "8px";
+        previews.appendChild(image);
+    });
 
     fileInput.addEventListener("change", function () {
         const files = Array.from(this.files);
