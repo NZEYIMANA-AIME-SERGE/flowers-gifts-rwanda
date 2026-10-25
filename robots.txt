@@ -1,0 +1,5 @@
+# Admin/action pages use noindex metadata and stay crawlable so crawlers can read it.
+User-agent: *
+Allow: /
+
+Sitemap: https://flowerandgiftsrwanda.onrender.com/sitemap.xml

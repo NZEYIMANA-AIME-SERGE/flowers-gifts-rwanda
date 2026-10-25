@@ -18,6 +18,7 @@ let cart = JSON.parse(
 // ==========================================
 
 const API_URL = "https://flowers-gifts-rwanda.onrender.com";
+const PUBLIC_SITE_URL = "https://flowerandgiftsrwanda.onrender.com";
 
 
 // ==========================================
@@ -405,6 +406,8 @@ function card(product) {
             <img
                 src="${product.image}"
                 alt="${product.name}"
+                loading="lazy"
+                decoding="async"
                 data-card-product-image="${product.id}"
             >
           `
@@ -480,7 +483,7 @@ function card(product) {
 
                 <a
                     class="details"
-                    href="product.html?id=${product.id}"
+                    href="product.html?id=${encodeURIComponent(product.mongoId || product.id)}"
                 >
                     View details →
                 </a>
@@ -932,6 +935,8 @@ function showFeaturedFlower(product) {
     /* Fade out */
 
     image.classList.add("fade-out");
+    image.loading = "lazy";
+    image.decoding = "async";
 
 
     setTimeout(() => {
@@ -974,7 +979,7 @@ function showFeaturedFlower(product) {
                 if (product.mongoId) {
 
                     window.location.href =
-                        `product.html?id=${product.mongoId}`;
+                        `product.html?id=${encodeURIComponent(product.mongoId)}`;
 
                 }
 
@@ -1047,6 +1052,8 @@ function showFeaturedGift(product) {
     /* Fade out */
 
     image.classList.add("fade-out");
+    image.loading = "lazy";
+    image.decoding = "async";
 
 
     setTimeout(() => {
@@ -1092,7 +1099,7 @@ function showFeaturedGift(product) {
                 if (product.mongoId) {
 
                     window.location.href =
-                        `product.html?id=${product.mongoId}`;
+                        `product.html?id=${encodeURIComponent(product.mongoId)}`;
 
                 }
 
@@ -1515,6 +1522,17 @@ const categoryNames = {
 
     }
 
+    const categoryLabel = category
+        ? (categoryNames[category] || category)
+        : "flowers and gifts";
+    document.title = category
+        ? `Shop ${categoryLabel} in Rwanda | Flowers & Gifts Rwanda`
+        : "Shop Flowers & Gifts in Rwanda | Flowers & Gifts Rwanda";
+    setMetaDescription(category
+        ? `Browse ${categoryLabel.toLowerCase()} from Flowers & Gifts Rwanda. View product photos, options, and details.`
+        : "Browse flowers, bouquets, chocolates, gift boxes, and other gifts in Rwanda from Flowers & Gifts Rwanda.");
+    setCanonicalURL(`${PUBLIC_SITE_URL}/shop.html`);
+
 
     // ==========================================
     // KEEP SELECTOR IN SYNC WITH URL
@@ -1690,7 +1708,7 @@ function renderShopCategories() {
         });
 
         const imageHTML = matchingProduct
-            ? `<img src="${matchingProduct.image}" alt="${category.name}" loading="lazy">`
+            ? `<img src="${matchingProduct.image}" alt="${matchingProduct.name || category.name}" loading="lazy" decoding="async">`
             : `<span class="shop-category-emoji">${category.emoji}</span>`;
 
         const isActive = selectedCategory === category.value;
@@ -1735,18 +1753,15 @@ function renderProduct() {
         );
 
 
-    const id =
-        Number(
-            params.get("id")
-        );
-
-
-    const product =
-        products.find(
-            product =>
-                product.id === id
-        ) ||
-        products[0];
+    const requestedId = params.get("id") || "";
+    const usesLocalFallbackProducts = products.every(product => !product.mongoId);
+    const product = products.find(item =>
+        item.mongoId && String(item.mongoId) === requestedId
+    ) || (
+        usesLocalFallbackProducts && /^\d+$/.test(requestedId)
+            ? products.find(item => item.id === Number(requestedId))
+            : null
+    );
 
 
     const element =
@@ -1755,14 +1770,21 @@ function renderProduct() {
         );
 
 
-    if (
-        !element ||
-        !product
-    ) {
+    if (!element) return;
 
+    if (!product) {
+        updateProductSEO(null);
+        element.innerHTML = `
+            <div class="empty-cart">
+                <h1>Product not found</h1>
+                <p>This product may no longer be available. Browse the current collection instead.</p>
+                <a href="shop.html">Browse flowers and gifts →</a>
+            </div>
+        `;
         return;
-
     }
+
+    updateProductSEO(product);
 
 
     const variations = Array.isArray(product.variations)
@@ -1838,7 +1860,7 @@ function renderProduct() {
                     ${initialImages.length > 1 ? initialImages.map((image, index) => `
                         <button type="button" class="product-detail-thumbnail${index === 0 ? " is-active" : ""}" data-photo="${image}"
                             aria-label="Show option photo ${index + 1}">
-                            <img src="${image}" alt="${product.name} photo ${index + 1}">
+                            <img src="${image}" alt="${product.name} product photo ${index + 1}" loading="lazy" decoding="async">
                         </button>
                     `).join("") : ""}
                 </div>
@@ -1891,6 +1913,101 @@ function renderProduct() {
 
 }
 
+function updateProductSEO(product) {
+    const title = product
+        ? `${product.name} | Flowers & Gifts Rwanda`
+        : "Product not found | Flowers & Gifts Rwanda";
+    const description = product
+        ? (product.description || `View photos and details for ${product.name} from Flowers & Gifts Rwanda.`)
+        : "This product could not be found. Browse flowers, bouquets, and gifts from Flowers & Gifts Rwanda.";
+
+    document.title = title;
+    setMetaDescription(description);
+
+    let canonicalURL = null;
+    if (product?.mongoId) {
+        canonicalURL = new URL("/product.html", PUBLIC_SITE_URL);
+        canonicalURL.searchParams.set("id", String(product.mongoId));
+        setCanonicalURL(canonicalURL.href);
+    } else {
+        setCanonicalURL(null);
+    }
+
+    let structuredData = document.getElementById("product-structured-data");
+    if (!product) {
+        structuredData?.remove();
+        return;
+    }
+
+    if (!product.mongoId) {
+        structuredData?.remove();
+        return;
+    }
+
+    const images = [
+        product.image,
+        ...(Array.isArray(product.images) ? product.images : []),
+        ...(Array.isArray(product.variations)
+            ? product.variations.flatMap(option => Array.isArray(option?.images) ? option.images : [])
+            : [])
+    ].filter((image, index, all) => image && all.indexOf(image) === index)
+        .map(image => new URL(image, window.location.href).href);
+    const schema = {
+        "@context": "https://schema.org",
+        "@type": "Product",
+        name: product.name,
+        description: product.description || undefined,
+        image: images.length ? images : undefined,
+        category: product.category || undefined
+    };
+    const numericPriceMatch = String(product.price ?? "").trim().match(/^(?:RWF\s*)?(\d+(?:,\d{3})*)(?:\.\d{1,2})?\s*(?:RWF)?$/i);
+    if (numericPriceMatch) {
+        const numericPrice = Number(numericPriceMatch[1].replace(/,/g, ""));
+        if (Number.isFinite(numericPrice) && numericPrice >= 0) {
+            schema.offers = {
+                "@type": "Offer",
+                url: canonicalURL.href,
+                priceCurrency: "RWF",
+                price: numericPrice.toFixed(2)
+            };
+        }
+    }
+
+    if (!structuredData) {
+        structuredData = document.createElement("script");
+        structuredData.type = "application/ld+json";
+        structuredData.id = "product-structured-data";
+        document.head.appendChild(structuredData);
+    }
+    structuredData.textContent = JSON.stringify(schema, (key, value) =>
+        value === undefined ? undefined : value
+    ).replace(/</g, "\\u003c");
+}
+
+function setMetaDescription(description) {
+    let descriptionTag = document.querySelector('meta[name="description"]');
+    if (!descriptionTag) {
+        descriptionTag = document.createElement("meta");
+        descriptionTag.name = "description";
+        document.head.appendChild(descriptionTag);
+    }
+    descriptionTag.content = String(description || "").replace(/\s+/g, " ").trim().slice(0, 160);
+}
+
+function setCanonicalURL(url) {
+    let canonicalTag = document.querySelector('link[rel="canonical"]');
+    if (!url) {
+        canonicalTag?.remove();
+        return;
+    }
+    if (!canonicalTag) {
+        canonicalTag = document.createElement("link");
+        canonicalTag.rel = "canonical";
+        document.head.appendChild(canonicalTag);
+    }
+    canonicalTag.href = url;
+}
+
 function selectProductVariation(productId, variationName) {
     const product = products.find(item => item.id === productId);
     const option = getStorefrontProductOptions(product)
@@ -1926,7 +2043,7 @@ function selectProductVariation(productId, variationName) {
             ? optionPhotoList.map((image, index) => `
                 <button type="button" class="product-detail-thumbnail${index === 0 ? " is-active" : ""}"
                     data-photo="${image}" aria-label="Show ${option.name} photo ${index + 1}">
-                    <img src="${image}" alt="${product.name} - ${option.name} photo ${index + 1}">
+                    <img src="${image}" alt="${product.name} - ${option.name} photo ${index + 1}" loading="lazy" decoding="async">
                 </button>
             `).join("")
             : "";
@@ -2003,7 +2120,7 @@ async function renderBundles() {
 
     element.innerHTML = bundles.map((bundle, index) => {
         const visual = bundle.image
-            ? `<img src="${escapeBundleText(bundle.image)}" alt="${escapeBundleText(bundle.name)}" class="bundle-photo">`
+            ? `<img src="${escapeBundleText(bundle.image)}" alt="${escapeBundleText(bundle.name)}" class="bundle-photo" loading="lazy" decoding="async">`
             : `<div class="bundle-art">${escapeBundleText((bundle.emoji || ["🎁"]).join(" "))}</div>`;
         return `
             <article class="bundle-card">
