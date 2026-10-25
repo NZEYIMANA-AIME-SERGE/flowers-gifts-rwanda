@@ -282,7 +282,7 @@
 <body>
     <header class="header">
         <div class="container nav">
-            <a class="logo" href="../index.html">
+            <a class="logo" href="/">
                 ✿
                 <span>
                     Product Management
@@ -290,7 +290,7 @@
                 </span>
             </a>
 
-            <a href="../index.html">View Store ↗</a>
+            <a href="/">View Store ↗</a>
         </div>
     </header>
 
@@ -505,7 +505,7 @@
             const token = sessionStorage.getItem("adminToken");
 
             if (!token) {
-                window.location.replace("./login.html");
+                window.location.replace("/admin/login");
                 throw new Error("Admin login required.");
             }
 
@@ -528,14 +528,14 @@
 
             if (response.status === 401) {
                 sessionStorage.removeItem("adminToken");
-                window.location.replace("./login.html");
+                window.location.replace("/admin/login");
             }
 
             return response;
         };
 
         if (!sessionStorage.getItem("adminToken")) {
-            window.location.replace("./login.html");
+            window.location.replace("/admin/login");
         }
 
         const logoutButton = document.createElement("button");
@@ -559,7 +559,7 @@
 
         logoutButton.addEventListener("click", () => {
             sessionStorage.removeItem("adminToken");
-            window.location.replace("./login.html");
+            window.location.replace("/admin/login");
         });
 
         document.body.appendChild(logoutButton);

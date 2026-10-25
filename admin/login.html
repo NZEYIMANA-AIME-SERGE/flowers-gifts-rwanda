@@ -177,7 +177,7 @@
 
         // Reuse an existing session if one is available.
         if (sessionStorage.getItem("adminToken")) {
-            window.location.replace("./index.html");
+            window.location.replace("/admin");
         }
 
         loginForm.addEventListener("submit", async function (event) {
@@ -218,7 +218,7 @@
                 message.textContent = "Login successful. Opening dashboard...";
                 message.className = "success";
 
-                window.location.replace("./index.html");
+                window.location.replace("/admin");
             } catch (error) {
                 message.textContent =
                     error.message === "Failed to fetch"

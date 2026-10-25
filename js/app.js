@@ -18,7 +18,7 @@ let cart = JSON.parse(
 // ==========================================
 
 const API_URL = "https://flowers-gifts-rwanda.onrender.com";
-const PUBLIC_SITE_URL = "https://flowerandgiftsrwanda.onrender.com";
+const PUBLIC_SITE_URL = "https://flowersandgiftsrwanda.com";
 
 
 // ==========================================
@@ -483,7 +483,7 @@ function card(product) {
 
                 <a
                     class="details"
-                    href="product.html?id=${encodeURIComponent(product.mongoId || product.id)}"
+                    href="/product?id=${encodeURIComponent(product.mongoId || product.id)}"
                 >
                     View details →
                 </a>
@@ -979,7 +979,7 @@ function showFeaturedFlower(product) {
                 if (product.mongoId) {
 
                     window.location.href =
-                        `product.html?id=${encodeURIComponent(product.mongoId)}`;
+                        `/product?id=${encodeURIComponent(product.mongoId)}`;
 
                 }
 
@@ -1099,7 +1099,7 @@ function showFeaturedGift(product) {
                 if (product.mongoId) {
 
                     window.location.href =
-                        `product.html?id=${encodeURIComponent(product.mongoId)}`;
+                        `/product?id=${encodeURIComponent(product.mongoId)}`;
 
                 }
 
@@ -1531,7 +1531,7 @@ const categoryNames = {
     setMetaDescription(category
         ? `Browse ${categoryLabel.toLowerCase()} from Flowers & Gifts Rwanda. View product photos, options, and details.`
         : "Browse flowers, bouquets, chocolates, gift boxes, and other gifts in Rwanda from Flowers & Gifts Rwanda.");
-    setCanonicalURL(`${PUBLIC_SITE_URL}/shop.html`);
+    setCanonicalURL(`${PUBLIC_SITE_URL}/shop`);
 
 
     // ==========================================
@@ -1569,7 +1569,7 @@ const categoryNames = {
                 </p>
 
 
-                <a href="shop.html">
+                <a href="/shop">
                     View all products →
                 </a>
 
@@ -1604,7 +1604,7 @@ const categoryNames = {
                 if (newCategory) {
 
                     window.location.href =
-                        `shop.html?category=${
+                        `/shop?category=${
                             encodeURIComponent(
                                 newCategory
                             )
@@ -1613,7 +1613,7 @@ const categoryNames = {
                 } else {
 
                     window.location.href =
-                        "shop.html";
+                        "/shop";
 
                 }
 
@@ -1681,7 +1681,7 @@ function renderShopCategories() {
         container.classList.add("shop-flower-ribbons");
         container.innerHTML = flowerOccasions.map(occasion => `
             <a class="shop-flower-ribbon${selectedOccasion === occasion.value ? " active" : ""}"
-                href="shop.html?category=flowers${occasion.value ? `&occasion=${encodeURIComponent(occasion.value)}` : ""}">
+                href="/shop?category=flowers${occasion.value ? `&occasion=${encodeURIComponent(occasion.value)}` : ""}">
                 <span aria-hidden="true">${occasion.emoji}</span>${occasion.name}
             </a>
         `).join("");
@@ -1735,7 +1735,7 @@ function renderShopCategories() {
             const category = button.dataset.category;
 
             window.location.href =
-                `shop.html?category=${encodeURIComponent(category)}`;
+                `/shop?category=${encodeURIComponent(category)}`;
         });
     });
 }
@@ -1778,7 +1778,7 @@ function renderProduct() {
             <div class="empty-cart">
                 <h1>Product not found</h1>
                 <p>This product may no longer be available. Browse the current collection instead.</p>
-                <a href="shop.html">Browse flowers and gifts →</a>
+                <a href="/shop">Browse flowers and gifts →</a>
             </div>
         `;
         return;
@@ -1926,7 +1926,7 @@ function updateProductSEO(product) {
 
     let canonicalURL = null;
     if (product?.mongoId) {
-        canonicalURL = new URL("/product.html", PUBLIC_SITE_URL);
+        canonicalURL = new URL("/product", PUBLIC_SITE_URL);
         canonicalURL.searchParams.set("id", String(product.mongoId));
         setCanonicalURL(canonicalURL.href);
     } else {
@@ -2202,7 +2202,7 @@ function renderCart() {
         element.innerHTML = `
             <div class="empty-cart">
                 <p>Your cart is empty.</p>
-                <a href="shop.html">Start shopping →</a>
+                <a href="/shop">Start shopping →</a>
             </div>
         `;
 
@@ -2489,7 +2489,7 @@ function placeOrder(event) {
 
 
     location.href =
-        "confirmation.html";
+        "/confirmation";
 
 }
 
@@ -2829,7 +2829,7 @@ function addCustomGift() {
 
     // Open cart.
     window.location.href =
-        "cart.html";
+        "/cart";
 
 }
 
