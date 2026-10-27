@@ -35,6 +35,21 @@ const WHATSAPP_NUMBER = "250780274472";
 const money = n =>
     new Intl.NumberFormat("en-RW").format(n) + " RWF";
 
+function getProductPriceAmount(product) {
+    if (!product || product.price === null || product.price === undefined) {
+        return null;
+    }
+
+    const priceText = String(product.price).trim();
+    if (!priceText) return null;
+
+    const match = priceText.match(/^(?:RWF\s*)?(\d[\d,]*(?:\.\d{1,2})?)\s*(?:RWF)?$/i);
+    if (!match) return null;
+
+    const amount = Number(match[1].replace(/,/g, ""));
+    return Number.isFinite(amount) ? amount : null;
+}
+
 
 // ==========================================
 // LOAD PRODUCTS FROM MONGODB
@@ -513,15 +528,15 @@ function orderProductViaWhatsApp(productId) {
     const option = getStorefrontProductOptions(product)
         .find(item => item.value === optionValue);
     const image = option?.images?.find(Boolean) || product.image || "";
-    const isFlower = (product.category || "").toLowerCase().trim() === "flowers";
+    const price = getProductPriceAmount(product);
 
     let message = "Hello Flowers & Gifts Rwanda! 🌸\n\nI would like to order this product:\n";
     message += `Name: ${product.name}\n`;
     if (option) message += `${option.type}: ${option.name}\n`;
     message += "Quantity: 1\n";
-    message += isFlower
+    message += price === null
         ? "Price: To be discussed\n"
-        : `Price: ${product.price || "To be discussed"}\n`;
+        : `Price: ${money(price)}\n`;
     if (image) message += `Product image: ${image}\n`;
     message += "\nPlease let me know the delivery details. Thank you!";
 
@@ -2212,9 +2227,6 @@ function renderCart() {
     }
 
     element.innerHTML = cart.map((item, index) => {
-        const isFlower =
-            (item.category || "").toLowerCase().trim() === "flowers";
-
         const itemImage = item.image
             ? `
                 <img
@@ -2229,11 +2241,10 @@ function renderCart() {
                 </div>
               `;
 
-        // Flowers have no fixed price in the cart.
-        // Custom gifts and all other products keep their existing pricing.
-        const itemTotal = isFlower
+        const unitPrice = getProductPriceAmount(item);
+        const itemTotal = unitPrice === null
             ? null
-            : Number(item.price) * item.quantity;
+            : unitPrice * item.quantity;
 
         const componentDetails =
             item.isCustomGift && item.components
@@ -2260,7 +2271,7 @@ function renderCart() {
                     ${componentDetails}
 
                     <p>
-                        ${isFlower ? "Price to be discussed" : `${money(item.price)} each`}
+                        ${unitPrice === null ? "Price to be discussed" : `${money(unitPrice)} each`}
                     </p>
                 </div>
 
@@ -2271,7 +2282,7 @@ function renderCart() {
                 </div>
 
                 <strong>
-                    ${isFlower ? "To be discussed" : money(itemTotal)}
+                    ${itemTotal === null ? "To be discussed" : money(itemTotal)}
                 </strong>
 
                 <button onclick="removeItem(${index})">
@@ -2281,20 +2292,14 @@ function renderCart() {
         `;
     }).join("");
 
-    // Exclude flowers from the calculated cart total.
-    // Other products and custom gifts retain their existing totals.
     const total = cart.reduce((sum, item) => {
-        const isFlower =
-            (item.category || "").toLowerCase().trim() === "flowers";
-
-        if (isFlower) return sum;
-
-        return sum + Number(item.price) * item.quantity;
+        const unitPrice = getProductPriceAmount(item);
+        return unitPrice === null
+            ? sum
+            : sum + unitPrice * item.quantity;
     }, 0);
 
-    const hasFlowers = cart.some(item =>
-        (item.category || "").toLowerCase().trim() === "flowers"
-    );
+    const hasUnpricedItems = cart.some(item => getProductPriceAmount(item) === null);
 
     const summary = document.getElementById("cart-summary");
 
@@ -2304,8 +2309,8 @@ function renderCart() {
                 <h2>Total: ${money(total)}</h2>
 
                 ${
-                    hasFlowers
-                        ? `<p>Flower prices will be discussed and confirmed through WhatsApp.</p>`
+                    hasUnpricedItems
+                        ? `<p>Items without a listed price will be confirmed through WhatsApp.</p>`
                         : ""
                 }
 
@@ -2338,12 +2343,10 @@ function orderViaWhatsApp() {
     message += "I would like to place an order:\n\n";
 
     cart.forEach((item, index) => {
-        const isFlower =
-            (item.category || "").toLowerCase().trim() === "flowers";
-
-        const itemTotal = isFlower
+        const unitPrice = getProductPriceAmount(item);
+        const itemTotal = unitPrice === null
             ? null
-            : Number(item.price) * item.quantity;
+            : unitPrice * item.quantity;
 
         message += `${index + 1}. ${item.name}\n`;
         if (item.variationName) {
@@ -2351,11 +2354,11 @@ function orderViaWhatsApp() {
         }
         message += `   Quantity: ${item.quantity}\n`;
 
-        if (isFlower) {
+        if (unitPrice === null) {
             message += "   Price: To be discussed\n";
             message += "   Subtotal: To be discussed\n";
         } else {
-            message += `   Price: ${money(item.price)} each\n`;
+            message += `   Price: ${money(unitPrice)} each\n`;
             message += `   Subtotal: ${money(itemTotal)}\n`;
         }
 
@@ -2377,24 +2380,19 @@ function orderViaWhatsApp() {
         message += "\n";
     });
 
-    // Exclude flowers from the calculated total.
     const total = cart.reduce((sum, item) => {
-        const isFlower =
-            (item.category || "").toLowerCase().trim() === "flowers";
-
-        if (isFlower) return sum;
-
-        return sum + Number(item.price) * item.quantity;
+        const unitPrice = getProductPriceAmount(item);
+        return unitPrice === null
+            ? sum
+            : sum + unitPrice * item.quantity;
     }, 0);
 
-    const hasFlowers = cart.some(item =>
-        (item.category || "").toLowerCase().trim() === "flowers"
-    );
+    const hasUnpricedItems = cart.some(item => getProductPriceAmount(item) === null);
 
     message += `Total for priced items: ${money(total)}\n`;
 
-    if (hasFlowers) {
-        message += "Flower prices are not included in this total and will be agreed upon through WhatsApp.\n";
+    if (hasUnpricedItems) {
+        message += "Items without a listed price are not included in this total and will be confirmed through WhatsApp.\n";
     }
 
     message += "\nPlease let me know the delivery details and how I can complete the payment.\n\n";
