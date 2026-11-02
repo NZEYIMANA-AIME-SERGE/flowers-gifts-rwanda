@@ -714,9 +714,7 @@ function addToCart(id, variationName = "") {
 
 
     save();
-
-
-    alert("Added to cart!");
+    window.location.href = "/cart";
 
 }
 
@@ -2497,11 +2495,7 @@ function addBundle(index) {
 
 
     save();
-
-
-    alert(
-        "Bundle added to cart!"
-    );
+    window.location.href = "/cart";
 
 }
 
@@ -3121,13 +3115,6 @@ function addCustomGift() {
 
 
     save();
-
-
-    alert(
-        "Your gift has been added to your cart!"
-    );
-
-
     // Open cart.
     window.location.href =
         "/cart";
