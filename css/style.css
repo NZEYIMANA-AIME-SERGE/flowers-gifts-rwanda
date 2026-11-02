@@ -115,6 +115,28 @@ nav a:hover {
     font-size: 0.7rem;
 }
 
+.mobile-menu-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--dark);
+    font-size: 1.8rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.mobile-menu-toggle:hover,
+.mobile-menu-toggle:focus-visible {
+    background: #f7e6ef;
+    outline: none;
+}
+
 
 /* =========================
    HERO
@@ -1013,8 +1035,38 @@ footer {
 
 @media (max-width: 900px) {
 
+    .header .container.nav {
+        position: relative;
+    }
+
     nav {
         display: none;
+    }
+
+    .mobile-menu-toggle {
+        display: inline-flex;
+        flex: 0 0 44px;
+    }
+
+    .header nav#site-navigation.is-open {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 20;
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        padding: 8px;
+        border: 1px solid var(--line);
+        border-radius: 0 0 16px 16px;
+        background: #fffaf7;
+        box-shadow: 0 14px 28px #2d26301a;
+    }
+
+    .header nav#site-navigation.is-open a {
+        padding: 12px 14px;
+        border-radius: 9px;
     }
 
 
@@ -1082,11 +1134,6 @@ footer {
         height: min(78vw, 340px);
         min-height: 235px;
         object-position: center;
-    }
-
-    .hero-contact {
-        top: 12px;
-        right: 12px;
     }
 
     .page-intro {
