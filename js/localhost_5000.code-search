@@ -1,0 +1,23 @@
+# Query: localhost:5000
+# ContextLines: 1
+
+4 results - 3 files
+
+checkout.html:
+  463          const response = await fetch(
+  464:           "https://flowers-gifts-rwanda.onrender.com/api/orders",
+  465            {
+
+admin\index.html:
+   795  
+   796:         const API_URL = "http://localhost:5000";
+   797  
+
+  2088  
+  2089:     const API_BASE_URL = "http://localhost:5000";
+  2090  
+
+js\app.js:
+  19  
+  20: const API_URL = "http://localhost:5000";
+  21  

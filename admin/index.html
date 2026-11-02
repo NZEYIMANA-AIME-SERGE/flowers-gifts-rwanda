@@ -277,6 +277,12 @@
             }
         }
     </style>
+    <link rel="preconnect" href="https://flowers-gifts-rwanda.onrender.com" crossorigin>
+    <link rel="preconnect" href="https://res.cloudinary.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap"></noscript>
 </head>
 
 <body>
@@ -779,6 +785,8 @@ function renderProducts() {
                         ? `<img
                                 src="${escapeHTML(productImage)}"
                                 alt="${escapeHTML(product.name)}"
+                                loading="lazy"
+                                decoding="async"
                                 style="width:60px;height:60px;object-fit:cover;border-radius:8px;"
                                 onerror="this.style.display='none';this.nextElementSibling.style.display='inline';"
                            >
@@ -908,6 +916,8 @@ function editProduct(productIndex) {
             const image = document.createElement("img");
             image.src = imageUrl;
             image.alt = product.name || "Main product photo";
+            image.loading = "lazy";
+            image.decoding = "async";
             image.style.width = "100px";
             image.style.height = "100px";
             image.style.objectFit = "cover";
@@ -936,6 +946,8 @@ function editProduct(productIndex) {
             const image = document.createElement("img");
             image.src = imageUrl;
             image.alt = product.name || "Product photo";
+            image.loading = "lazy";
+            image.decoding = "async";
             image.style.width = "100px";
             image.style.height = "100px";
             image.style.objectFit = "cover";
@@ -1301,6 +1313,8 @@ function addVariationGroup(name = "", existingImages = [], originalName = "") {
         const image = document.createElement("img");
         image.src = imageUrl;
         image.alt = name || "Variation photo";
+        image.loading = "lazy";
+        image.decoding = "async";
         image.style.width = "100px";
         image.style.height = "100px";
         image.style.objectFit = "cover";

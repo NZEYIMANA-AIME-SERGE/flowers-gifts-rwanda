@@ -26,6 +26,9 @@ const PUBLIC_SITE_URL = "https://flowersandgiftsrwanda.com";
 // ==========================================
 
 const WHATSAPP_NUMBER = "250780274472";
+const STOREFRONT_CACHE_KEY = "storefront-products-v1";
+const STOREFRONT_CACHE_TTL_MS = 60 * 1000;
+const processedImageSources = new WeakMap();
 
 
 // ==========================================
@@ -50,10 +53,149 @@ function getProductPriceAmount(product) {
     return Number.isFinite(amount) ? amount : null;
 }
 
+function optimizeCloudinaryImageURL(source, width = 640) {
+    if (!source) return source;
+
+    try {
+        const url = new URL(source, window.location.href);
+        const uploadPath = "/image/upload/";
+        const uploadIndex = url.pathname.indexOf(uploadPath);
+
+        if (url.hostname !== "res.cloudinary.com" || uploadIndex === -1) {
+            return source;
+        }
+
+        const prefix = url.pathname.slice(0, uploadIndex + uploadPath.length);
+        const pathParts = url.pathname.slice(prefix.length).split("/");
+        const firstPart = pathParts[0] || "";
+        const isTransformation = /(?:^|,)(?:w_|h_|c_|q_|f_|dpr_|ar_)/i.test(firstPart);
+        const targetWidth = Math.max(160, Math.min(1600, Math.round(width)));
+
+        if (isTransformation) {
+            const options = firstPart.split(",").filter(Boolean);
+            const replaceOption = (prefix, value) => {
+                const index = options.findIndex(option => option.toLowerCase().startsWith(prefix));
+                if (index === -1) options.push(value);
+                else options[index] = value;
+            };
+
+            replaceOption("f_", "f_auto");
+            replaceOption("q_", "q_auto");
+            replaceOption("w_", `w_${targetWidth}`);
+            if (!options.some(option => option.toLowerCase().startsWith("c_"))) {
+                options.push("c_limit");
+            }
+            pathParts[0] = options.join(",");
+        } else {
+            pathParts.unshift(`f_auto,q_auto,w_${targetWidth},c_limit`);
+        }
+
+        url.pathname = `${prefix}${pathParts.join("/")}`;
+        return url.href;
+    } catch {
+        return source;
+    }
+}
+
+function storefrontImageSizes(image) {
+    if (image.matches(".product-detail-thumbnail img")) return "96px";
+    if (image.matches(".cart-row img, .checkout-product-image")) return "88px";
+    if (image.matches(".builder-choice-image, .builder-preview-image")) return "(max-width: 700px) 30vw, 180px";
+    if (image.matches(".product-detail-main-image")) return "(max-width: 800px) 94vw, 48vw";
+    if (image.matches(".featured-gallery-image")) return "(max-width: 700px) 92vw, 46vw";
+    if (image.matches(".shop-category-image img")) return "(max-width: 700px) 28vw, 180px";
+    return "(max-width: 600px) 88vw, (max-width: 1000px) 42vw, 320px";
+}
+
+function optimizeStorefrontImages(root = document) {
+    const images = [];
+    if (root instanceof HTMLImageElement) images.push(root);
+    if (root.querySelectorAll) images.push(...root.querySelectorAll("img"));
+
+    images.forEach(image => {
+        const source = image.getAttribute("src");
+        if (!source || processedImageSources.get(image) === source) return;
+
+        image.decoding = "async";
+        if (!image.hasAttribute("loading")) {
+            image.loading = image.getBoundingClientRect().top < window.innerHeight ? "eager" : "lazy";
+        }
+        const productCard = image.closest(".product-card");
+        if (image.matches(".product-detail-main-image") ||
+            (productCard && productCard === document.querySelector(".product-card"))) {
+            image.fetchPriority = "high";
+        }
+
+        const optimized160 = optimizeCloudinaryImageURL(source, 160);
+        if (optimized160 === source) {
+            processedImageSources.set(image, source);
+            return;
+        }
+
+        const optimized320 = optimizeCloudinaryImageURL(source, 320);
+        const optimized640 = optimizeCloudinaryImageURL(source, 640);
+        const optimized960 = optimizeCloudinaryImageURL(source, 960);
+        image.sizes = storefrontImageSizes(image);
+        image.srcset = `${optimized160} 160w, ${optimized320} 320w, ${optimized640} 640w, ${optimized960} 960w`;
+        image.src = optimized640;
+        processedImageSources.set(image, optimized640);
+    });
+}
+
+const storefrontImageObserver = new MutationObserver(records => {
+    records.forEach(record => {
+        if (record.type === "attributes") {
+            optimizeStorefrontImages(record.target);
+        } else {
+            record.addedNodes.forEach(node => {
+                if (node.nodeType === Node.ELEMENT_NODE) optimizeStorefrontImages(node);
+            });
+        }
+    });
+});
+
+storefrontImageObserver.observe(document.documentElement, {
+    childList: true,
+    subtree: true,
+    attributes: true,
+    attributeFilter: ["src"]
+});
+optimizeStorefrontImages();
+
+function saveStorefrontProductsCache() {
+    try {
+        localStorage.setItem(STOREFRONT_CACHE_KEY, JSON.stringify({
+            savedAt: Date.now(),
+            products,
+            deletedOriginalBundles: deletedOriginalBundleNames
+        }));
+    } catch (error) {
+        console.warn("Could not cache storefront products:", error);
+    }
+}
+
+function loadStorefrontProductsCache() {
+    try {
+        const cached = JSON.parse(localStorage.getItem(STOREFRONT_CACHE_KEY) || "null");
+        if (!cached || !Array.isArray(cached.products) ||
+            Date.now() - cached.savedAt > STOREFRONT_CACHE_TTL_MS) return false;
+
+        products = cached.products;
+        deletedOriginalBundleNames = Array.isArray(cached.deletedOriginalBundles)
+            ? cached.deletedOriginalBundles
+            : [];
+        return true;
+    } catch {
+        return false;
+    }
+}
+
 
 // ==========================================
 // LOAD PRODUCTS FROM MONGODB
 // ==========================================
+
+let deletedOriginalBundleNames = [];
 
 async function loadMongoProducts() {
 
@@ -186,6 +328,12 @@ async function loadMongoProducts() {
 
         products =
             databaseProducts;
+
+        deletedOriginalBundleNames = Array.isArray(data.deletedOriginalBundles)
+            ? data.deletedOriginalBundles
+            : [];
+
+        saveStorefrontProductsCache();
 
 
         console.log(
@@ -2096,40 +2244,27 @@ function escapeBundleText(value) {
     })[character]);
 }
 
-async function renderBundles() {
+function renderBundles() {
     const element = document.getElementById("bundles");
     if (!element) return;
 
-    let managedBundles = [];
-    let managedNames = [];
-    let deletedOriginalBundles = [];
-    try {
-        const response = await fetch(`${API_URL}/api/products`);
-        const data = await response.json();
-        if (response.ok && data.success) {
-            const products = data.products || [];
-            deletedOriginalBundles = data.deletedOriginalBundles || [];
-            managedNames = products
-                .filter(product => product.category === "gift-bundles")
-                .map(product => product.name);
-            managedBundles = products
-                .filter(product => product.category === "gift-bundles" && product.available !== false)
-                .map(product => ({
-                    ...product,
-                    image: product.image || product.images?.[0] || "",
-                    mongoId: product._id
-                }));
-        }
-    } catch (error) {
-        console.warn("Could not load gift bundles from the server:", error);
-    }
+    const managedBundles = products
+        .filter(product => product.category === "gift-bundles" && product.available !== false)
+        .map(product => ({
+            ...product,
+            image: product.image || product.images?.[0] || "",
+            mongoId: product.mongoId || product._id
+        }));
+    const managedNames = products
+        .filter(product => product.category === "gift-bundles")
+        .map(product => product.name);
 
     const managedNameSet = new Set(managedNames.map(name => String(name).toLowerCase()));
     const bundles = [
-        ...managedBundles.map(bundle => ({ ...bundle, mongoId: bundle._id })),
+        ...managedBundles,
         ...defaultBundles.filter(bundle =>
             !managedNameSet.has(bundle.name.toLowerCase()) &&
-            !deletedOriginalBundles.includes(bundle.name)
+            !deletedOriginalBundleNames.includes(bundle.name)
         )
     ];
 
@@ -2836,79 +2971,36 @@ function addCustomGift() {
 // INITIALIZE APPLICATION
 // ==========================================
 
-async function initializeApp() {
-
-    // ==========================================
-    // LOAD PRODUCTS FROM MONGODB
-    // ==========================================
-
-    await loadMongoProducts();
-
-
-    // ==========================================
-    // UPDATE CART COUNT
-    // ==========================================
-
-    updateCount();
-
-
-    // ==========================================
-    // FEATURED / POPULAR PRODUCTS
-    // ==========================================
-
+function renderProductDrivenSections() {
     renderFeatured();
-
-
-    // ==========================================
-    // HOMEPAGE FLOWERS
-    // ==========================================
-
     renderHomepageFlowers();
-
-
-    // ==========================================
-    // SHOP PAGE
-    // ==========================================
-
     renderShop();
-
-
-    // ==========================================
-    // PRODUCT DETAILS
-    // ==========================================
-
     renderProduct();
-
-
-    // ==========================================
-    // BUNDLES
-    // ==========================================
-
     renderBundles();
+    updateBuilder();
+    initializeFeaturedGalleries();
+    optimizeStorefrontImages();
+}
 
-
-    // ==========================================
-    // CART
-    // ==========================================
-
+async function initializeApp() {
+    updateCount();
     renderCart();
 
+    const needsProductCatalog = Boolean(document.querySelector(
+        "#homepage-flowers, #shop-products, #product-detail, #bundles, #flower"
+    ));
+    if (!needsProductCatalog) return;
 
-    // ==========================================
-    // BUILD A GIFT
-    // ==========================================
+    // A recent product cache paints product pages immediately. The API still
+    // refreshes in the background so edits and availability changes are picked up.
+    const hasCachedProducts = loadStorefrontProductsCache();
+    if (hasCachedProducts) renderProductDrivenSections();
 
-    updateBuilder();
-
-
-    // ==========================================
-    // FEATURED FLOWERS & GIFTS GALLERIES
-    // IMPORTANT:
-    // THIS MUST RUN AFTER PRODUCTS ARE LOADED
-    // ==========================================
-
-    initializeFeaturedGalleries();
-
+    const productsLoaded = await loadMongoProducts();
+    if (productsLoaded || !hasCachedProducts) {
+        renderProductDrivenSections();
+        renderCart();
+    }
 }
 
 

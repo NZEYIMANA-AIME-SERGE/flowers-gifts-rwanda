@@ -281,10 +281,15 @@ app.get("/api/health", (req, res) => {
 app.get("/api/products", async (req, res) => {
     try {
         const [products, bundleSetting] = await Promise.all([
-            Product.find(),
+            Product.find()
+                .select("name description price category occasion image images variationType variations stock available")
+                .lean(),
             StoreSetting.findOne({ key: "deleted-original-bundles" })
         ]);
 
+        // Public catalog data changes through product management, so keep the
+        // cache short while avoiding a database query for every storefront visit.
+        res.set("Cache-Control", "public, max-age=15, stale-while-revalidate=45");
         res.json({
             success: true,
             products,
