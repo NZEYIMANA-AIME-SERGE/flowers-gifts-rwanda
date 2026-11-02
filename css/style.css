@@ -1496,10 +1496,8 @@ footer {
 }
 
 .hero-contact {
-    position: absolute;
-    top: 13px;
-    right: 40px;
-    z-index: 10;
+    position: static;
+    flex: 0 0 48px;
 }
 
 .hero-contact a {
