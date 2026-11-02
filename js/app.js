@@ -380,6 +380,7 @@ function save() {
 
 
     updateCount();
+    renderCartDrawer();
 
 }
 
@@ -403,6 +404,173 @@ function updateCount() {
 
         });
 
+}
+
+function escapeCartDrawerText(value) {
+    return String(value ?? "").replace(/[&<>"']/g, character => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+    })[character]);
+}
+
+function renderCartDrawer() {
+    const drawer = document.getElementById("cart-drawer-items");
+    const totalElement = document.getElementById("cart-drawer-total");
+    const noteElement = document.getElementById("cart-drawer-note");
+    if (!drawer || !totalElement || !noteElement) return;
+
+    const orderButton = document.querySelector(".cart-drawer-order");
+    const viewCartLink = document.querySelector(".cart-drawer-view");
+    if (orderButton) orderButton.hidden = cart.length === 0;
+    if (viewCartLink) viewCartLink.hidden = cart.length === 0;
+
+    if (!cart.length) {
+        drawer.innerHTML = `
+            <div class="cart-drawer-empty">
+                <span aria-hidden="true">🛍️</span>
+                <p>Your cart is empty.</p>
+                <button type="button" class="btn primary" data-cart-drawer-close>Continue shopping</button>
+            </div>
+        `;
+    } else {
+        drawer.innerHTML = cart.map((item, index) => {
+            const name = escapeCartDrawerText(item.name || "Gift item");
+            const image = escapeCartDrawerText(item.image || "");
+            const variation = item.variationName
+                ? `<p class="cart-drawer-variation">${escapeCartDrawerText(item.variationType || "Option")}: ${escapeCartDrawerText(item.variationName)}</p>`
+                : "";
+            const price = getProductPriceAmount(item);
+            const itemTotal = price === null ? null : price * item.quantity;
+            const visual = image
+                ? `<img src="${image}" alt="${name}" loading="lazy" decoding="async">`
+                : `<span class="cart-drawer-emoji" aria-hidden="true">${escapeCartDrawerText(item.emoji || "🎁")}</span>`;
+
+            return `
+                <article class="cart-drawer-item">
+                    ${visual}
+                    <div class="cart-drawer-item-info">
+                        <strong>${name}</strong>
+                        ${variation}
+                        <span class="cart-drawer-price">${price === null ? "Price to be discussed" : `${money(price)} each`}</span>
+                        <div class="cart-drawer-quantity" aria-label="Quantity controls for ${name}">
+                            <button type="button" data-cart-drawer-action="decrease" data-cart-index="${index}" aria-label="Decrease quantity">−</button>
+                            <span>${item.quantity}</span>
+                            <button type="button" data-cart-drawer-action="increase" data-cart-index="${index}" aria-label="Increase quantity">+</button>
+                        </div>
+                    </div>
+                    <div class="cart-drawer-item-end">
+                        <strong>${itemTotal === null ? "To be discussed" : money(itemTotal)}</strong>
+                        <button type="button" class="cart-drawer-remove" data-cart-drawer-action="remove" data-cart-index="${index}">Remove</button>
+                    </div>
+                </article>
+            `;
+        }).join("");
+    }
+
+    const total = cart.reduce((sum, item) => {
+        const price = getProductPriceAmount(item);
+        return price === null ? sum : sum + price * item.quantity;
+    }, 0);
+    const hasUnpricedItems = cart.some(item => getProductPriceAmount(item) === null);
+    totalElement.textContent = `Total for priced items: ${money(total)}`;
+    noteElement.textContent = !cart.length
+        ? "Add a flower or gift to get started."
+        : hasUnpricedItems
+        ? "Items without a listed price will be confirmed through WhatsApp."
+        : "Your listed prices are included in this total.";
+}
+
+function initializeCartDrawer() {
+    if (!document.querySelector("[data-cart-drawer-trigger]")) return;
+
+    const backdrop = document.createElement("div");
+    backdrop.className = "cart-drawer-backdrop";
+    backdrop.id = "cart-drawer-backdrop";
+    backdrop.hidden = true;
+    backdrop.innerHTML = `
+        <aside class="cart-drawer" id="cart-drawer" role="dialog" aria-modal="true" aria-labelledby="cart-drawer-title" tabindex="-1">
+            <div class="cart-drawer-header">
+                <div>
+                    <span class="eyebrow">Your selection</span>
+                    <h2 id="cart-drawer-title">Shopping Cart</h2>
+                </div>
+                <button type="button" class="cart-drawer-close" aria-label="Close cart" data-cart-drawer-close>×</button>
+            </div>
+            <div class="cart-drawer-items" id="cart-drawer-items"></div>
+            <footer class="cart-drawer-footer">
+                <strong id="cart-drawer-total"></strong>
+                <p id="cart-drawer-note"></p>
+                <button type="button" class="btn primary cart-drawer-order" onclick="orderViaWhatsApp()">Order via WhatsApp 📱</button>
+                <a class="btn cart-drawer-view" href="/cart">View full cart</a>
+                <button type="button" class="cart-drawer-continue" data-cart-drawer-close>Continue shopping</button>
+            </footer>
+        </aside>
+    `;
+    document.body.appendChild(backdrop);
+    renderCartDrawer();
+
+    const closeButton = backdrop.querySelector(".cart-drawer-close");
+    let lastTrigger = null;
+    let previousBodyOverflow = "";
+
+    const closeDrawer = () => {
+        if (backdrop.hidden) return;
+        backdrop.classList.remove("is-open");
+        document.body.style.overflow = previousBodyOverflow;
+        window.setTimeout(() => {
+            if (!backdrop.classList.contains("is-open")) backdrop.hidden = true;
+        }, 220);
+        lastTrigger?.focus();
+    };
+
+    document.querySelectorAll("[data-cart-drawer-trigger]").forEach(trigger => {
+        trigger.addEventListener("click", event => {
+            event.preventDefault();
+            lastTrigger = trigger;
+            if (backdrop.hidden) previousBodyOverflow = document.body.style.overflow;
+            renderCartDrawer();
+            backdrop.hidden = false;
+            document.body.style.overflow = "hidden";
+            window.requestAnimationFrame(() => backdrop.classList.add("is-open"));
+            closeButton.focus();
+        });
+    });
+
+    backdrop.addEventListener("click", event => {
+        if (event.target === backdrop || event.target.closest("[data-cart-drawer-close]")) {
+            closeDrawer();
+            return;
+        }
+
+        const actionButton = event.target.closest("[data-cart-drawer-action]");
+        if (!actionButton) return;
+        const index = Number(actionButton.dataset.cartIndex);
+        const action = actionButton.dataset.cartDrawerAction;
+        if (action === "increase") changeQty(index, 1);
+        if (action === "decrease") changeQty(index, -1);
+        if (action === "remove") removeItem(index);
+    });
+
+    backdrop.querySelector(".cart-drawer-view").addEventListener("click", closeDrawer);
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !backdrop.hidden) closeDrawer();
+        if (event.key === "Tab" && !backdrop.hidden) {
+            const focusable = backdrop.querySelectorAll("button:not([hidden]), a[href]:not([hidden])");
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault();
+                first.focus();
+            }
+        }
+    });
 }
 
 function getStorefrontProductOptions(product) {
@@ -3012,6 +3180,7 @@ function initializeMobileMenu() {
 
 async function initializeApp() {
     initializeMobileMenu();
+    initializeCartDrawer();
     updateCount();
     renderCart();
 
